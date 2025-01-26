@@ -2,6 +2,64 @@
 
 医療従事者向けの患者管理Flutterアプリケーション。
 
+## アーキテクチャ
+
+```mermaid
+graph TB
+    subgraph "Frontend"
+        App[Flutter App]
+        style App fill:#e1f5fe
+    end
+
+    subgraph "Core API (モジュラーモノリス)"
+        REST[REST API]
+        PatientM[患者管理]
+        RoomM[部屋管理]
+        StaffM[スタッフ管理]
+        TaskM[タスク管理]
+        
+        style REST fill:#fff3e0
+        REST --> PatientM & RoomM & StaffM & TaskM
+    end
+
+    subgraph "Chat Service"
+        GRPC[gRPC Server]
+        Chat[チャット管理]
+        style GRPC fill:#f3e5f5
+        GRPC --> Chat
+    end
+
+    App --> REST
+    App --> GRPC
+```
+
+## バックエンドアーキテクチャ
+
+バックエンドは2つの主要なサービスで構成されています：
+
+### Core API (モジュラーモノリス)
+- RESTful API
+- 以下のリソースを管理：
+  - 患者情報
+  - 部屋情報
+  - スタッフ情報
+  - タスク管理
+
+### Chat Service
+- gRPCベースの双方向ストリーミング通信
+- 医療スタッフ間のチャット機能を提供
+- 主な機能：
+  - 双方向ストリーミングによるリアルタイムチャット
+  - ルーム参加/退出の管理
+  - アクティブユーザーの追跡
+
+## API仕様
+
+APIの詳細仕様は以下のファイルで定義されています：
+
+- [Core API仕様書](api/schemas/core-api.yaml) - REST APIの詳細仕様
+- [Chat Service Proto](api/protos/chat.proto) - gRPCサービスの定義
+
 ## ページ構成
 
 アプリケーションは以下の2つの主要な画面で構成されています：
@@ -34,8 +92,9 @@
 
 2. チャットタブ
    - 医療スタッフ間のコミュニケーション機能
-   - メッセージの送受信機能
+   - gRPCストリーミングによるリアルタイムメッセージング
    - チャット履歴の表示
+   - ルーム参加者のステータス表示
 
 3. TODOタブ
    - 患者に関するタスク管理
