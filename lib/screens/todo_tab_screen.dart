@@ -64,7 +64,6 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF202124),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -81,7 +80,8 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFF1A73E8)),
+                      borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.primary),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -104,7 +104,8 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFF1A73E8)),
+                      borderSide: BorderSide(
+                          color: Theme.of(context).colorScheme.primary),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -150,8 +151,9 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
                               builder: (context, child) {
                                 return Theme(
                                   data: Theme.of(context).copyWith(
-                                    colorScheme: const ColorScheme.light(
-                                      primary: Color(0xFF1A73E8),
+                                    colorScheme: ColorScheme.light(
+                                      primary:
+                                          Theme.of(context).colorScheme.primary,
                                     ),
                                   ),
                                   child: child!,
@@ -163,7 +165,8 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
                             }
                           },
                           style: TextButton.styleFrom(
-                            foregroundColor: const Color(0xFF1A73E8),
+                            foregroundColor:
+                                Theme.of(context).colorScheme.primary,
                           ),
                           child: Text(
                             '${selectedDate.year}/${selectedDate.month}/${selectedDate.day}',
@@ -205,7 +208,7 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
                         }
                       },
                       style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFF1A73E8),
+                        foregroundColor: Theme.of(context).colorScheme.primary,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 12,
@@ -230,7 +233,7 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
     return Stack(
       children: [
         Container(
-          color: const Color(0xFFF8F9FA), // Googleチャットの背景色
+          color: const Color(0xFFF8F9FA),
           child: ListView.builder(
             padding: const EdgeInsets.all(16.0),
             itemCount: _todos.length,
@@ -264,8 +267,8 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
                               width: 4,
                               decoration: BoxDecoration(
                                 color: todo.isCompleted
-                                    ? Colors.green
-                                    : const Color(0xFF1A73E8), // Googleブルー
+                                    ? Theme.of(context).colorScheme.secondary
+                                    : Theme.of(context).colorScheme.primary,
                                 borderRadius: const BorderRadius.only(
                                   topLeft: Radius.circular(8.0),
                                   bottomLeft: Radius.circular(8.0),
@@ -287,7 +290,9 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
                                             todo.isCompleted = value!;
                                           });
                                         },
-                                        activeColor: Colors.green,
+                                        activeColor: Theme.of(context)
+                                            .colorScheme
+                                            .secondary,
                                         shape: RoundedRectangleBorder(
                                           borderRadius:
                                               BorderRadius.circular(3),
@@ -364,7 +369,7 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
           bottom: 16,
           child: FloatingActionButton.extended(
             onPressed: _addTodo,
-            backgroundColor: const Color(0xFF1A73E8),
+            backgroundColor: Theme.of(context).colorScheme.primary,
             icon: const Icon(Icons.add),
             label: const Text('新規タスク'),
           ),

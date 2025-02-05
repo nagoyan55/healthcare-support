@@ -9,7 +9,14 @@ class PatientDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Map<String, String> patient =
-        ModalRoute.of(context)!.settings.arguments as Map<String, String>;
+        (ModalRoute.of(context)?.settings.arguments as Map<String, String>?) ??
+            {
+              'id': 'A',
+              'name': '山田 太郎',
+              'room': '101',
+              'bed': 'A',
+              'gender': 'M',
+            };
 
     return DefaultTabController(
       length: 3,

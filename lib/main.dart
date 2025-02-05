@@ -36,10 +36,26 @@ class MyApp extends StatelessWidget {
           titleLarge: TextStyle(
               color: Colors.black, fontSize: 22, fontWeight: FontWeight.bold),
         ),
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+          backgroundColor: Color(0xFF2E7D32),
+          foregroundColor: Colors.white,
+        ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFF2E7D32),
           foregroundColor: Colors.white,
           elevation: 0,
+        ),
+        tabBarTheme: const TabBarTheme(
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          indicatorColor: Colors.white,
+          labelStyle: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+          unselectedLabelStyle: TextStyle(
+            fontSize: 14,
+          ),
         ),
       ),
       home: const LoginScreen(),
@@ -47,7 +63,9 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/ward_selection': (context) => const WardSelectionScreen(),
         '/patient_selection': (context) => const PatientSelectionScreen(),
-        '/patient_detail': (context) => const PatientDetailScreen(),
+        '/patient_detail': (context) => const PatientDetailScreen(
+              key: ValueKey('patient_detail'),
+            ),
         '/my_page': (context) => const MyPageScreen(),
       },
     );

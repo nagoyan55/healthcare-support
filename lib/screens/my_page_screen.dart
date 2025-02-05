@@ -32,7 +32,10 @@ class _StaffTaskTab extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {},
-                      child: const Text('タスクを追加'),
+                      child: const Text(
+                        'タスクを追加',
+                        style: TextStyle(color: Colors.black87),
+                      ),
                     ),
                   ),
                 ],
@@ -374,6 +377,7 @@ class _MyPageScreenState extends State<MyPageScreen>
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _selectedColor,
+                            foregroundColor: Colors.white,
                             minimumSize: const Size(double.infinity, 50),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
