@@ -18,12 +18,31 @@ class MyApp extends StatelessWidget {
       title: 'ほすさぽくん',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF4CAF50), // メインカラーを緑系に変更
-          primary: const Color(0xFF4CAF50),
-          secondary: const Color(0xFF81C784),
-          tertiary: const Color(0xFFC8E6C9),
+          seedColor: const Color(0xFF2E7D32), // より濃い緑に変更
+          primary: const Color(0xFF2E7D32),
+          secondary: const Color(0xFF66BB6A),
+          tertiary: const Color(0xFFA5D6A7),
+          background: const Color(0xFFF5F5F5),
+          surface: Colors.white,
+          onPrimary: Colors.white,
+          onSecondary: Colors.black,
+          onTertiary: Colors.black87,
+          onBackground: Colors.black,
+          onSurface: Colors.black87,
+          brightness: Brightness.light,
         ),
         useMaterial3: true,
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Colors.black87, fontSize: 16),
+          bodyMedium: TextStyle(color: Colors.black87, fontSize: 14),
+          titleLarge: TextStyle(
+              color: Colors.black, fontSize: 22, fontWeight: FontWeight.bold),
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF2E7D32),
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
       ),
       home: const LoginScreen(),
       routes: {

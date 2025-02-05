@@ -289,7 +289,8 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
                                         },
                                         activeColor: Colors.green,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(3),
+                                          borderRadius:
+                                              BorderRadius.circular(3),
                                         ),
                                       ),
                                     ),
