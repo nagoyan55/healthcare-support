@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class Reaction {
   final String emoji;
   final String user;
-  
+
   Reaction({
     required this.emoji,
     required this.user,
@@ -64,7 +64,7 @@ class ChatTabScreen extends StatefulWidget {
 class _ChatTabScreenState extends State<ChatTabScreen> {
   final TextEditingController _messageController = TextEditingController();
   String? _selectedEhr;
-  
+
   final List<ChatMessage> _messages = [
     ChatMessage(
       sender: '山田医師',
@@ -153,7 +153,7 @@ class _ChatTabScreenState extends State<ChatTabScreen> {
 
   void _showReactionPicker(ChatMessage message, int index) {
     final reactions = ['👍', '✅', '👀', '❗', '⭐'];
-    
+
     showDialog(
       context: context,
       builder: (context) {
@@ -296,7 +296,7 @@ class _ChatTabScreenState extends State<ChatTabScreen> {
             itemBuilder: (context, index) {
               final message = _messages[_messages.length - 1 - index];
               final messageDate = _formatDate(message.timestamp);
-              
+
               // 日付区切りの表示判定
               Widget? dateWidget;
               if (currentDate != messageDate) {
@@ -370,7 +370,8 @@ class _ChatTabScreenState extends State<ChatTabScreen> {
                                 children: [
                                   if (message.quotedEhr != null)
                                     Container(
-                                      margin: const EdgeInsets.only(bottom: 8.0),
+                                      margin:
+                                          const EdgeInsets.only(bottom: 8.0),
                                       padding: const EdgeInsets.all(8.0),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFFF1F3F4),
@@ -422,24 +423,32 @@ class _ChatTabScreenState extends State<ChatTabScreen> {
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 ListTile(
-                                                  leading: const Icon(Icons.add_reaction),
-                                                  title: const Text('リアクションを追加'),
+                                                  leading: const Icon(
+                                                      Icons.add_reaction),
+                                                  title:
+                                                      const Text('リアクションを追加'),
                                                   onTap: () {
                                                     Navigator.pop(context);
                                                     _showReactionPicker(
                                                       message,
-                                                      _messages.length - 1 - index,
+                                                      _messages.length -
+                                                          1 -
+                                                          index,
                                                     );
                                                   },
                                                 ),
                                                 ListTile(
-                                                  leading: const Icon(Icons.share),
-                                                  title: const Text('他の医療従事者と共有'),
+                                                  leading:
+                                                      const Icon(Icons.share),
+                                                  title:
+                                                      const Text('他の医療従事者と共有'),
                                                   onTap: () {
                                                     Navigator.pop(context);
                                                     _shareMessage(
                                                       message,
-                                                      _messages.length - 1 - index,
+                                                      _messages.length -
+                                                          1 -
+                                                          index,
                                                     );
                                                   },
                                                 ),
@@ -480,16 +489,17 @@ class _ChatTabScreenState extends State<ChatTabScreen> {
                                             .map((reaction) => Tooltip(
                                                   message: reaction.user,
                                                   child: Container(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
                                                       horizontal: 8,
                                                       vertical: 4,
                                                     ),
                                                     decoration: BoxDecoration(
-                                                      color:
-                                                          const Color(0xFFF1F3F4),
+                                                      color: const Color(
+                                                          0xFFF1F3F4),
                                                       borderRadius:
-                                                          BorderRadius.circular(12),
+                                                          BorderRadius.circular(
+                                                              12),
                                                     ),
                                                     child: Text(
                                                       reaction.emoji,

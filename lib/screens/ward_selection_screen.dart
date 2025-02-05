@@ -38,14 +38,14 @@ class WardSelectionScreen extends StatelessWidget {
         itemBuilder: (context, index) {
           final ward = wards[index];
           final isCurrentWard = ward['name'] == '脳神経内科';
-          
+
           return Card(
             margin: const EdgeInsets.only(bottom: 16),
             child: ListTile(
               title: Text(ward['name']!),
-              trailing: isCurrentWard 
-                ? const Icon(Icons.home, color: Colors.blue)
-                : const Icon(Icons.arrow_forward_ios),
+              trailing: isCurrentWard
+                  ? const Icon(Icons.home, color: Colors.blue)
+                  : const Icon(Icons.arrow_forward_ios),
               tileColor: isCurrentWard ? Colors.blue.withOpacity(0.1) : null,
               onTap: () {
                 Navigator.pushNamed(

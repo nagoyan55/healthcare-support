@@ -20,8 +20,8 @@ class _StaffTaskTab extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  TextField(
-                    decoration: const InputDecoration(
+                  const TextField(
+                    decoration: InputDecoration(
                       labelText: '新しいタスク',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.add_task),
@@ -121,7 +121,8 @@ class _StaffChatTab extends StatelessWidget {
   }
 }
 
-class _MyPageScreenState extends State<MyPageScreen> with SingleTickerProviderStateMixin {
+class _MyPageScreenState extends State<MyPageScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _formKey = GlobalKey<FormState>();
   String _name = '';

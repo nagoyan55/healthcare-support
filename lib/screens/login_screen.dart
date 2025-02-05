@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -9,10 +12,11 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _name = '';
+  final TextEditingController _nameController = TextEditingController();
   String _selectedWard = '内科';
   String _selectedOccupation = '看護師';
   int _selectedIconIndex = 0;
+  File? _imageFile;
 
   final List<String> _wards = ['内科', '外科', '小児科', '産婦人科', '精神科'];
   final List<String> _occupations = ['看護師', '医師', '薬剤師', '理学療法士', '作業療法士'];
@@ -25,10 +29,61 @@ class _LoginScreenState extends State<LoginScreen> {
     Icons.face_6,
   ];
 
-  void _handleSubmit() {
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedName();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadSavedName() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedName = prefs.getString('user_name');
+    if (savedName != null) {
+      setState(() {
+        _nameController.text = savedName;
+      });
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        _imageFile = File(image.path);
+        _selectedIconIndex = -1; // カスタム画像を選択した場合
+      });
+    }
+  }
+
+  Future<void> _takePicture() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.camera);
+
+    if (image != null) {
+      setState(() {
+        _imageFile = File(image.path);
+        _selectedIconIndex = -1; // カスタム画像を選択した場合
+      });
+    }
+  }
+
+  Future<void> _handleSubmit() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      // TODO: Save user data
+
+      // ユーザー名を保存
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_name', _nameController.text);
+
+      if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/ward_selection');
     }
   }
@@ -53,46 +108,71 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 48),
-                
+
                 // アイコン選択
                 const Text('アイコンを選択', style: TextStyle(fontSize: 16)),
                 const SizedBox(height: 16),
-                SizedBox(
-                  height: 100,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _avatarIcons.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedIconIndex = index;
-                            });
-                          },
-                          child: CircleAvatar(
-                            radius: 30,
-                            backgroundColor: _selectedIconIndex == index
-                                ? Theme.of(context).primaryColor
-                                : Colors.grey[300],
-                            child: Icon(
-                              _avatarIcons[index],
-                              size: 40,
-                              color: _selectedIconIndex == index
-                                  ? Colors.white
-                                  : Colors.grey[600],
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _pickImage,
+                      icon: const Icon(Icons.photo_library),
+                      label: const Text('ギャラリーから選択'),
+                    ),
+                    const SizedBox(width: 16),
+                    ElevatedButton.icon(
+                      onPressed: _takePicture,
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text('写真を撮影'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                if (_imageFile != null)
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundImage: FileImage(_imageFile!),
+                  )
+                else
+                  SizedBox(
+                    height: 100,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _avatarIcons.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedIconIndex = index;
+                                _imageFile = null;
+                              });
+                            },
+                            child: CircleAvatar(
+                              radius: 30,
+                              backgroundColor: _selectedIconIndex == index
+                                  ? Theme.of(context).primaryColor
+                                  : Colors.grey[300],
+                              child: Icon(
+                                _avatarIcons[index],
+                                size: 40,
+                                color: _selectedIconIndex == index
+                                    ? Colors.white
+                                    : Colors.grey[600],
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
-                ),
                 const SizedBox(height: 24),
 
                 // 名前入力
                 TextFormField(
+                  controller: _nameController,
                   decoration: const InputDecoration(
                     labelText: '名前',
                     border: OutlineInputBorder(),
@@ -103,9 +183,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       return '名前を入力してください';
                     }
                     return null;
-                  },
-                  onSaved: (value) {
-                    _name = value!;
                   },
                 ),
                 const SizedBox(height: 24),

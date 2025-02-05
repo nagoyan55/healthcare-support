@@ -13,7 +13,8 @@ class ProfileTabScreen extends StatefulWidget {
 }
 
 class _ProfileTabScreenState extends State<ProfileTabScreen> {
-  final TextEditingController _presentIllnessController = TextEditingController();
+  final TextEditingController _presentIllnessController =
+      TextEditingController();
   String _summarizedIllness = '';
 
   @override
@@ -164,8 +165,8 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 16),
-                    TextField(
-                      decoration: const InputDecoration(
+                    const TextField(
+                      decoration: InputDecoration(
                         border: OutlineInputBorder(),
                         hintText: 'キーワードを入力して検索',
                         prefixIcon: Icon(Icons.search),

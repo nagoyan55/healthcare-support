@@ -57,7 +57,8 @@ class PatientSelectionScreen extends StatelessWidget {
                   children: [
                     const Text(
                       '担当ナース: 社畜',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -81,12 +82,13 @@ class PatientSelectionScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 final patient = patients[index];
                 final isAssigned = assignedPatients.contains(patient['id']);
-                
+
                 return Card(
                   margin: const EdgeInsets.only(bottom: 16),
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: patient['gender'] == 'M' ? Colors.blue : Colors.pink,
+                      backgroundColor:
+                          patient['gender'] == 'M' ? Colors.blue : Colors.pink,
                       child: const Icon(Icons.person, color: Colors.white),
                     ),
                     title: Text(patient['name']!),
@@ -95,7 +97,9 @@ class PatientSelectionScreen extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          isAssigned ? Icons.check_circle : Icons.add_circle_outline,
+                          isAssigned
+                              ? Icons.check_circle
+                              : Icons.add_circle_outline,
                           color: isAssigned ? Colors.blue : Colors.grey,
                         ),
                         const Icon(Icons.arrow_forward_ios),
