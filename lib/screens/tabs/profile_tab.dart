@@ -2,28 +2,26 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/theme_provider.dart';
 
-class ProfileTab extends StatefulWidget {
-  final Color selectedColor;
-  final ValueChanged<Color> onColorChanged;
+class ProfileTab extends ConsumerStatefulWidget {
   final int selectedIconIndex;
   final ValueChanged<int> onIconChanged;
 
   const ProfileTab({
     super.key,
-    required this.selectedColor,
-    required this.onColorChanged,
     required this.selectedIconIndex,
     required this.onIconChanged,
   });
 
   @override
-  State<ProfileTab> createState() => _ProfileTabState();
+  ConsumerState<ProfileTab> createState() => _ProfileTabState();
 }
 
-class _ProfileTabState extends State<ProfileTab> {
+class _ProfileTabState extends ConsumerState<ProfileTab> {
   final _formKey = GlobalKey<FormState>();
-  String _name = '';
+  final _nameController = TextEditingController();
   String _selectedWard = '内科';
   String _selectedOccupation = '看護師';
 
@@ -52,6 +50,12 @@ class _ProfileTabState extends State<ProfileTab> {
     _loadUserData();
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadUserData() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -64,7 +68,7 @@ class _ProfileTabState extends State<ProfileTab> {
         if (doc.exists) {
           final data = doc.data()!;
           setState(() {
-            _name = data['name'] ?? '';
+            _nameController.text = data['name'] ?? '';
             _selectedWard = data['ward'] ?? '内科';
             _selectedOccupation = data['occupation'] ?? '看護師';
           });
@@ -77,6 +81,9 @@ class _ProfileTabState extends State<ProfileTab> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = ref.watch(themeNotifierProvider);
+    final primaryColor = theme.colorScheme.primary;
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -91,7 +98,7 @@ class _ProfileTabState extends State<ProfileTab> {
                   children: [
                     CircleAvatar(
                       radius: 50,
-                      backgroundColor: widget.selectedColor,
+                      backgroundColor: primaryColor,
                       child: Icon(
                         _avatarIcons[widget.selectedIconIndex],
                         size: 60,
@@ -100,7 +107,7 @@ class _ProfileTabState extends State<ProfileTab> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      _name.isEmpty ? 'ユーザー名' : _name,
+                      _nameController.text.isEmpty ? 'ユーザー名' : _nameController.text,
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -126,19 +133,20 @@ class _ProfileTabState extends State<ProfileTab> {
                   scrollDirection: Axis.horizontal,
                   itemCount: _avatarIcons.length,
                   itemBuilder: (context, index) {
+                    final isSelected = widget.selectedIconIndex == index;
                     return Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: GestureDetector(
                         onTap: () => widget.onIconChanged(index),
                         child: CircleAvatar(
                           radius: 30,
-                          backgroundColor: widget.selectedIconIndex == index
-                              ? widget.selectedColor
+                          backgroundColor: isSelected
+                              ? primaryColor
                               : Colors.grey[300],
                           child: Icon(
                             _avatarIcons[index],
                             size: 40,
-                            color: widget.selectedIconIndex == index
+                            color: isSelected
                                 ? Colors.white
                                 : Colors.grey[600],
                           ),
@@ -165,14 +173,32 @@ class _ProfileTabState extends State<ProfileTab> {
                   scrollDirection: Axis.horizontal,
                   itemCount: _themeColors.length,
                   itemBuilder: (context, index) {
+                    final color = _themeColors[index];
+                    final isSelected = color.value == primaryColor.value;
                     return Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: GestureDetector(
-                        onTap: () => widget.onColorChanged(_themeColors[index]),
-                        child: CircleAvatar(
-                          radius: 25,
-                          backgroundColor: _themeColors[index],
-                          child: widget.selectedColor == _themeColors[index]
+                        onTap: () => ref
+                            .read(themeNotifierProvider.notifier)
+                            .setThemeColor(color),
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: color,
+                            shape: BoxShape.circle,
+                            border: isSelected
+                                ? Border.all(color: Colors.white, width: 2)
+                                : null,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: isSelected
                               ? const Icon(
                                   Icons.check,
                                   color: Colors.white,
@@ -196,7 +222,7 @@ class _ProfileTabState extends State<ProfileTab> {
               ),
               const SizedBox(height: 16),
               TextFormField(
-                initialValue: _name,
+                controller: _nameController,
                 decoration: const InputDecoration(
                   labelText: '名前',
                   border: OutlineInputBorder(),
@@ -207,9 +233,6 @@ class _ProfileTabState extends State<ProfileTab> {
                     return '名前を入力してください';
                   }
                   return null;
-                },
-                onSaved: (value) {
-                  _name = value!;
                 },
               ),
               const SizedBox(height: 16),
@@ -258,14 +281,6 @@ class _ProfileTabState extends State<ProfileTab> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: widget.selectedColor,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
                   onPressed: () async {
                     if (_formKey.currentState!.validate()) {
                       _formKey.currentState!.save();
@@ -276,7 +291,7 @@ class _ProfileTabState extends State<ProfileTab> {
                               .collection('users')
                               .doc(user.uid)
                               .update({
-                            'name': _name,
+                            'name': _nameController.text,
                             'ward': _selectedWard,
                             'occupation': _selectedOccupation,
                             'iconIndex': widget.selectedIconIndex,

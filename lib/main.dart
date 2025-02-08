@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'providers/theme_provider.dart';
 import 'screens/ward_selection_screen.dart';
 import 'screens/patient_selection_screen.dart';
 import 'screens/patient_detail_screen.dart';
@@ -27,7 +29,11 @@ void main() async {
     await _connectToEmulator();
   }
 
-  runApp(const MyApp());
+  runApp(
+    const ProviderScope(
+      child: MyApp(),
+    ),
+  );
 }
 
 Future<void> _connectToEmulator() async {
@@ -42,55 +48,16 @@ Future<void> _connectToEmulator() async {
   await FirebaseAuth.instance.useAuthEmulator(localhost, 9099);
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = ref.watch(themeNotifierProvider);
+
     return MaterialApp(
       title: 'ほすさぽくん',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF2E7D32), // より濃い緑に変更
-          primary: const Color(0xFF2E7D32),
-          secondary: const Color(0xFF66BB6A),
-          tertiary: const Color(0xFFA5D6A7),
-          surface: Colors.white,
-          onPrimary: Colors.white,
-          onSecondary: Colors.black,
-          onTertiary: Colors.black87,
-          onSurface: Colors.black87,
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Colors.black87, fontSize: 16),
-          bodyMedium: TextStyle(color: Colors.black87, fontSize: 14),
-          titleLarge: TextStyle(
-              color: Colors.black, fontSize: 22, fontWeight: FontWeight.bold),
-        ),
-        floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: Color(0xFF2E7D32),
-          foregroundColor: Colors.white,
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF2E7D32),
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
-        tabBarTheme: const TabBarTheme(
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          indicatorColor: Colors.white,
-          labelStyle: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-          unselectedLabelStyle: TextStyle(
-            fontSize: 14,
-          ),
-        ),
-      ),
+      theme: theme,
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
