@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/auth_service.dart';
 import '../services/user_service.dart';
 import '../services/patient_service.dart';
 import '../widgets/auth_wrapper.dart';
+import '../providers/patient_provider.dart';
 
-class PatientSelectionScreen extends StatefulWidget {
+class PatientSelectionScreen extends ConsumerStatefulWidget {
   const PatientSelectionScreen({super.key});
 
   @override
-  State<PatientSelectionScreen> createState() => _PatientSelectionScreenState();
+  ConsumerState<PatientSelectionScreen> createState() => _PatientSelectionScreenState();
 }
 
-class _PatientSelectionScreenState extends State<PatientSelectionScreen> {
+class _PatientSelectionScreenState extends ConsumerState<PatientSelectionScreen> {
   final AuthService _authService = AuthService();
   final UserService _userService = UserService();
   final PatientService _patientService = PatientService();
@@ -147,6 +149,8 @@ class _PatientSelectionScreenState extends State<PatientSelectionScreen> {
                           ],
                         ),
                         onTap: () {
+                          // プロバイダーに患者情報を設定
+                          ref.read(currentPatientProvider.notifier).setPatient(patient);
                           Navigator.pushNamed(
                             context,
                             '/patient_detail',

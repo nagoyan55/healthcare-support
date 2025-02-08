@@ -1,22 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/patient_provider.dart';
 import 'chat_tab_screen.dart';
 import 'profile_tab_screen.dart';
 import 'todo_tab_screen.dart';
 
-class PatientDetailScreen extends StatelessWidget {
+class PatientDetailScreen extends ConsumerStatefulWidget {
   const PatientDetailScreen({super.key});
 
   @override
+  ConsumerState<PatientDetailScreen> createState() => _PatientDetailScreenState();
+}
+
+class _PatientDetailScreenState extends ConsumerState<PatientDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // 画面表示時に引数から患者情報を取得
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      if (args != null) {
+        ref.read(currentPatientProvider.notifier).setPatient(args);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final Map<String, dynamic> patient =
-        (ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?) ??
-            {
-              'id': 'A',
-              'name': '山田 太郎',
-              'room': '101',
-              'bed': 'A',
-              'gender': 'M',
-            };
+    final patient = ref.watch(currentPatientProvider) ?? {
+      'id': 'A',
+      'name': '読み込み中...',
+      'room': '---',
+      'bed': '-',
+      'gender': '-',
+    };
 
     return DefaultTabController(
       length: 3,

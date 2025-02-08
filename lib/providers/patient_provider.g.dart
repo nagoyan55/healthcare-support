@@ -1,26 +1,26 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'theme_provider.dart';
+part of 'patient_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$themeNotifierHash() => r'b908659686b05a74ca93e23603734145793e9d59';
+String _$currentPatientHash() => r'd26597e6be49923b38098f1f803dbc0ff97bee18';
 
-/// See also [ThemeNotifier].
-@ProviderFor(ThemeNotifier)
-final themeNotifierProvider =
-    NotifierProvider<ThemeNotifier, ThemeData>.internal(
-  ThemeNotifier.new,
-  name: r'themeNotifierProvider',
+/// See also [CurrentPatient].
+@ProviderFor(CurrentPatient)
+final currentPatientProvider =
+    NotifierProvider<CurrentPatient, Map<String, dynamic>?>.internal(
+  CurrentPatient.new,
+  name: r'currentPatientProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$themeNotifierHash,
+      : _$currentPatientHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef _$ThemeNotifier = Notifier<ThemeData>;
+typedef _$CurrentPatient = Notifier<Map<String, dynamic>?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
