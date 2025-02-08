@@ -3,8 +3,33 @@ const initialData = require('../data/initial_data.json');
 
 // エミュレータに接続
 process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
-admin.initializeApp({ projectId: 'demo-healthcare-support' });
+process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+
+// エミュレータ環境では認証情報は不要
+admin.initializeApp({
+  projectId: 'demo-healthcare-support'
+});
+
 const db = admin.firestore();
+const auth = admin.auth();
+
+async function createAuthUser() {
+  try {
+    await auth.createUser({
+      uid: 'demo-user',
+      email: 'demo@example.com',
+      password: 'password123',
+      displayName: '鈴木看護師'
+    });
+    console.log('Authenticationユーザーを作成しました');
+  } catch (error) {
+    if (error.code === 'auth/uid-already-exists') {
+      console.log('ユーザーは既に存在します');
+    } else {
+      throw error;
+    }
+  }
+}
 
 async function seedData() {
   try {
@@ -32,4 +57,14 @@ async function seedData() {
   }
 }
 
-seedData();
+async function main() {
+  try {
+    await createAuthUser();
+    await seedData();
+  } catch (error) {
+    console.error('エラーが発生しました:', error);
+    process.exit(1);
+  }
+}
+
+main();

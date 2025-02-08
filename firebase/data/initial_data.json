@@ -1,25 +1,41 @@
 {
-  "users": [
-    {
-      "id": "demo-user",
-      "name": "鈴木看護師",
-      "ward": "内科",
-      "occupation": "看護師",
-      "email": "demo@example.com",
-      "iconIndex": 0,
-      "createdAt": "2025-02-08T14:31:00.000Z"
-    }
-  ],
   "patients": [
     {
       "id": "patient-1",
       "basicInfo": {
-        "id": "A",
+        "name": "中村 正男",
+        "room": "201",
+        "bed": "bed-a",
+        "gender": "M",
+        "ward": "ward-1"
+      },
+      "medicalHistory": [
+        {
+          "condition": "脳梗塞",
+          "startDate": "2024-12-01T00:00:00.000Z",
+          "details": "右片麻痺"
+        },
+        {
+          "condition": "高血圧",
+          "startDate": "2023-06-01T00:00:00.000Z",
+          "details": "降圧剤服用中"
+        },
+        {
+          "condition": "糖尿病",
+          "startDate": "2023-06-01T00:00:00.000Z",
+          "details": "食事療法と内服治療中"
+        }
+      ],
+      "currentCondition": "リハビリ中"
+    },
+    {
+      "id": "patient-2",
+      "basicInfo": {
         "name": "山田 太郎",
         "room": "101",
-        "bed": "A",
+        "bed": "bed-a",
         "gender": "M",
-        "ward": "内科"
+        "ward": "ward-2"
       },
       "medicalHistory": [
         {
@@ -39,12 +55,121 @@
         }
       ],
       "currentCondition": "血圧管理中"
+    },
+    {
+      "id": "patient-3",
+      "basicInfo": {
+        "name": "佐藤 花子",
+        "room": "101",
+        "bed": "bed-b",
+        "gender": "F",
+        "ward": "ward-3"
+      },
+      "medicalHistory": [
+        {
+          "condition": "気管支喘息",
+          "startDate": "2022-06-01T00:00:00.000Z",
+          "details": "吸入薬使用中"
+        }
+      ],
+      "currentCondition": "症状安定"
+    },
+    {
+      "id": "patient-4",
+      "basicInfo": {
+        "name": "田中 一郎",
+        "room": "102",
+        "bed": "bed-a",
+        "gender": "M",
+        "ward": "ward-2"
+      },
+      "medicalHistory": [
+        {
+          "condition": "心不全",
+          "startDate": "2023-01-15T00:00:00.000Z",
+          "details": "投薬治療中"
+        }
+      ],
+      "currentCondition": "経過観察中"
+    },
+    {
+      "id": "patient-5",
+      "basicInfo": {
+        "name": "鈴木 美咲",
+        "room": "102",
+        "bed": "bed-b",
+        "gender": "F",
+        "ward": "ward-3"
+      },
+      "medicalHistory": [
+        {
+          "condition": "貧血",
+          "startDate": "2024-01-01T00:00:00.000Z",
+          "details": "鉄剤投与中"
+        }
+      ],
+      "currentCondition": "改善傾向"
+    }
+  ],
+  "users": [
+    {
+      "id": "demo-user",
+      "name": "鈴木看護師",
+      "occupation": "看護師",
+      "email": "demo@example.com",
+      "iconIndex": 0,
+      "createdAt": "2025-02-08T14:31:00.000Z"
+    },
+    {
+      "id": "nurse-2",
+      "name": "佐藤看護師",
+      "occupation": "看護師",
+      "email": "nurse2@example.com",
+      "iconIndex": 1,
+      "createdAt": "2025-02-08T14:31:00.000Z"
+    },
+    {
+      "id": "nurse-3",
+      "name": "田中看護師",
+      "occupation": "看護師",
+      "email": "nurse3@example.com",
+      "iconIndex": 2,
+      "createdAt": "2025-02-08T14:31:00.000Z"
     }
   ],
   "todos": {
     "patient-1": {
       "tasks": [
         {
+          "id": "task-1",
+          "type": "patient-care",
+          "patientId": "patient-1",
+          "title": "リハビリ補助",
+          "description": "歩行訓練の介助",
+          "deadline": "2025-02-09T10:00:00.000Z",
+          "assignedTo": "demo-user",
+          "isCompleted": false,
+          "createdAt": "2025-02-08T14:31:00.000Z"
+        },
+        {
+          "id": "task-2",
+          "type": "patient-care",
+          "patientId": "patient-1",
+          "title": "嚥下機能評価",
+          "description": "食事時の様子観察",
+          "deadline": "2025-02-09T12:00:00.000Z",
+          "assignedTo": "nurse-2",
+          "isCompleted": false,
+          "createdAt": "2025-02-08T14:31:00.000Z"
+        }
+      ]
+    },
+    "patient-2": {
+      "tasks": [
+        {
+          "id": "task-3",
+          "type": "patient-care",
+          "patientId": "patient-2",
           "title": "血圧測定",
           "description": "朝・昼・晩の3回測定",
           "deadline": "2025-02-09T14:31:00.000Z",
@@ -53,26 +178,171 @@
           "createdAt": "2025-02-08T14:31:00.000Z"
         },
         {
+          "id": "task-4",
+          "type": "patient-care",
+          "patientId": "patient-2",
           "title": "服薬確認",
           "description": "降圧剤の服用確認",
           "deadline": "2025-02-08T18:31:00.000Z",
+          "assignedTo": "nurse-2",
+          "isCompleted": false,
+          "createdAt": "2025-02-08T14:31:00.000Z"
+        }
+      ]
+    },
+    "patient-3": {
+      "tasks": [
+        {
+          "id": "task-5",
+          "type": "patient-care",
+          "patientId": "patient-3",
+          "title": "吸入薬確認",
+          "description": "吸入手技の確認と指導",
+          "deadline": "2025-02-09T10:00:00.000Z",
           "assignedTo": "demo-user",
           "isCompleted": false,
           "createdAt": "2025-02-08T14:31:00.000Z"
         },
         {
-          "title": "リハビリ",
-          "description": "歩行訓練 15分",
-          "deadline": "2025-02-08T20:31:00.000Z",
+          "id": "task-6",
+          "type": "patient-care",
+          "patientId": "patient-3",
+          "title": "バイタル測定",
+          "description": "体温・血圧・脈拍の測定",
+          "deadline": "2025-02-09T11:00:00.000Z",
+          "assignedTo": "nurse-3",
+          "isCompleted": false,
+          "createdAt": "2025-02-08T14:31:00.000Z"
+        }
+      ]
+    },
+    "patient-4": {
+      "tasks": [
+        {
+          "id": "task-7",
+          "type": "patient-care",
+          "patientId": "patient-4",
+          "title": "心音聴取",
+          "description": "心音・呼吸音の聴取",
+          "deadline": "2025-02-09T11:00:00.000Z",
+          "assignedTo": "nurse-2",
+          "isCompleted": false,
+          "createdAt": "2025-02-08T14:31:00.000Z"
+        },
+        {
+          "id": "task-8",
+          "type": "patient-care",
+          "patientId": "patient-4",
+          "title": "服薬管理",
+          "description": "内服薬の確認と管理",
+          "deadline": "2025-02-09T12:00:00.000Z",
+          "assignedTo": "nurse-3",
+          "isCompleted": false,
+          "createdAt": "2025-02-08T14:31:00.000Z"
+        }
+      ]
+    },
+    "patient-5": {
+      "tasks": [
+        {
+          "id": "task-9",
+          "type": "patient-care",
+          "patientId": "patient-5",
+          "title": "採血",
+          "description": "貧血検査用の採血",
+          "deadline": "2025-02-09T09:00:00.000Z",
           "assignedTo": "demo-user",
+          "isCompleted": false,
+          "createdAt": "2025-02-08T14:31:00.000Z"
+        },
+        {
+          "id": "task-10",
+          "type": "patient-care",
+          "patientId": "patient-5",
+          "title": "食事介助",
+          "description": "昼食の介助",
+          "deadline": "2025-02-09T12:30:00.000Z",
+          "assignedTo": "nurse-2",
           "isCompleted": false,
           "createdAt": "2025-02-08T14:31:00.000Z"
         }
       ]
     }
   },
+  "assigned_patients": {
+    "demo-user": {
+      "patients": [
+        {
+          "patientId": "patient-1",
+          "assignedAt": "2025-02-08T14:31:00.000Z"
+        },
+        {
+          "patientId": "patient-2",
+          "assignedAt": "2025-02-08T14:31:00.000Z"
+        },
+        {
+          "patientId": "patient-3",
+          "assignedAt": "2025-02-08T14:31:00.000Z"
+        },
+        {
+          "patientId": "patient-5",
+          "assignedAt": "2025-02-08T14:31:00.000Z"
+        }
+      ]
+    },
+    "nurse-2": {
+      "patients": [
+        {
+          "patientId": "patient-1",
+          "assignedAt": "2025-02-08T14:31:00.000Z"
+        },
+        {
+          "patientId": "patient-2",
+          "assignedAt": "2025-02-08T14:31:00.000Z"
+        },
+        {
+          "patientId": "patient-4",
+          "assignedAt": "2025-02-08T14:31:00.000Z"
+        },
+        {
+          "patientId": "patient-5",
+          "assignedAt": "2025-02-08T14:31:00.000Z"
+        }
+      ]
+    },
+    "nurse-3": {
+      "patients": [
+        {
+          "patientId": "patient-3",
+          "assignedAt": "2025-02-08T14:31:00.000Z"
+        },
+        {
+          "patientId": "patient-4",
+          "assignedAt": "2025-02-08T14:31:00.000Z"
+        }
+      ]
+    }
+  },
   "chats": {
     "patient-1": {
+      "messages": [
+        {
+          "sender": "demo-doctor",
+          "message": "嚥下機能の評価をお願いします。",
+          "timestamp": "2025-02-07T12:31:00.000Z",
+          "isShared": true,
+          "reactions": [
+            {
+              "emoji": "👍",
+              "user": "demo-user"
+            }
+          ]
+        }
+      ],
+      "participants": ["demo-user", "demo-doctor"],
+      "lastMessageTime": "2025-02-07T12:31:00.000Z"
+    },
+    "patient-2": {
       "messages": [
         {
           "sender": "demo-doctor",
@@ -107,5 +377,31 @@
       "participants": ["demo-user", "demo-doctor", "demo-doctor-2"],
       "lastMessageTime": "2025-02-08T13:31:00.000Z"
     }
-  }
+  },
+  "wards": [
+    {
+      "id": "ward-1",
+      "name": "脳神経内科"
+    },
+    {
+      "id": "ward-2",
+      "name": "内科病棟"
+    },
+    {
+      "id": "ward-3",
+      "name": "外科病棟"
+    },
+    {
+      "id": "ward-4",
+      "name": "小児科病棟"
+    },
+    {
+      "id": "ward-5",
+      "name": "産婦人科病棟"
+    },
+    {
+      "id": "ward-6",
+      "name": "精神科病棟"
+    }
+  ]
 }

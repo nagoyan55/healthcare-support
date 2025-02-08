@@ -239,7 +239,8 @@ class _SignUpTabState extends State<SignUpTab> {
     if (_formKey.currentState!.validate()) {
       try {
         // Firebase Authでユーザーを作成
-        final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        final userCredential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text,
           password: _passwordController.text,
         );

@@ -3,7 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/todo_service.dart';
 
 class TodoTabScreen extends StatefulWidget {
-  const TodoTabScreen({super.key});
+  final String patientId;
+
+  const TodoTabScreen({
+    super.key,
+    required this.patientId,
+  });
 
   @override
   State<TodoTabScreen> createState() => _TodoTabScreenState();
@@ -12,7 +17,7 @@ class TodoTabScreen extends StatefulWidget {
 class _TodoTabScreenState extends State<TodoTabScreen> {
   final TodoService _todoService = TodoService();
   List<Map<String, dynamic>> _todos = [];
-  String _currentUserId = 'demo-user'; // TODO: 認証から取得
+  String _currentUserId = 'demo-user';
 
   @override
   void initState() {
@@ -22,7 +27,7 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
 
   Future<void> _loadTodos() async {
     try {
-      final todosStream = _todoService.getTodos('patient-1'); // TODO: 患者IDを動的に取得
+      final todosStream = _todoService.getTodos(widget.patientId);
       todosStream.listen((todos) {
         setState(() {
           _todos = todos;
@@ -194,7 +199,7 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
                         if (titleController.text.isNotEmpty) {
                           try {
                             await _todoService.addTodo(
-                              patientId: 'patient-1', // TODO: 患者IDを動的に取得
+                              patientId: widget.patientId,
                               title: titleController.text,
                               description: descriptionController.text,
                               deadline: selectedDate,
@@ -298,14 +303,17 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
                                         onChanged: (value) async {
                                           try {
                                             await _todoService.updateTodoStatus(
-                                              patientId: 'patient-1', // TODO: 患者IDを動的に取得
+                                              patientId: widget.patientId,
                                               todoId: todo['id'] as String,
                                               isCompleted: value!,
                                             );
                                           } catch (e) {
                                             if (mounted) {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(content: Text('タスクの状態更新に失敗しました')),
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                const SnackBar(
+                                                    content: Text(
+                                                        'タスクの状態更新に失敗しました')),
                                               );
                                             }
                                           }
@@ -330,7 +338,8 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
                                             style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.w500,
-                                              decoration: todo['isCompleted'] as bool
+                                              decoration: todo['isCompleted']
+                                                      as bool
                                                   ? TextDecoration.lineThrough
                                                   : TextDecoration.none,
                                               color: todo['isCompleted'] as bool

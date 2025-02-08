@@ -1,37 +1,57 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
+import '../services/user_service.dart';
+import '../services/patient_service.dart';
 
-class PatientSelectionScreen extends StatelessWidget {
+class PatientSelectionScreen extends StatefulWidget {
   const PatientSelectionScreen({super.key});
+
+  @override
+  State<PatientSelectionScreen> createState() => _PatientSelectionScreenState();
+}
+
+class _PatientSelectionScreenState extends State<PatientSelectionScreen> {
+  final AuthService _authService = AuthService();
+  final UserService _userService = UserService();
+  final PatientService _patientService = PatientService();
+
+  late Future<Map<String, dynamic>> _screenDataFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _screenDataFuture = _loadScreenData();
+  }
+
+  Future<Map<String, dynamic>> _loadScreenData() async {
+    final currentUser = _authService.currentUser;
+    if (currentUser == null) {
+      throw Exception('ユーザーが見つかりません');
+    }
+
+    final userData = await _userService.getUserData(currentUser.uid);
+    if (userData == null) {
+      throw Exception('ユーザー情報が見つかりません');
+    }
+
+    final Map<String, String> selectedWard =
+        ModalRoute.of(context)!.settings.arguments as Map<String, String>;
+
+    final patients = await _patientService.getPatientsByWard(
+      selectedWard['id']!,
+      nurseId: currentUser.uid,
+    );
+
+    return {
+      'userData': userData,
+      'patients': patients,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
     final Map<String, String> selectedWard =
         ModalRoute.of(context)!.settings.arguments as Map<String, String>;
-
-    final List<Map<String, String>> patients = [
-      {'id': 'A', 'name': '山田 太郎', 'room': '101', 'bed': 'A', 'gender': 'M'},
-      {'id': 'F', 'name': '鈴木 花子', 'room': '101', 'bed': 'B', 'gender': 'F'},
-      {'id': 'M', 'name': '佐藤 次郎', 'room': '102', 'bed': 'A', 'gender': 'M'},
-      {'id': 'K', 'name': '田中 美咲', 'room': '102', 'bed': 'B', 'gender': 'F'},
-      {'id': 'J', 'name': '伊藤 健一', 'room': '103', 'bed': 'A', 'gender': 'M'},
-      {'id': 'L', 'name': '高橋 優子', 'room': '103', 'bed': 'B', 'gender': 'F'},
-      {'id': 'V', 'name': '渡辺 隆', 'room': '104', 'bed': 'A', 'gender': 'M'},
-      {'id': 'R', 'name': '小林 明', 'room': '104', 'bed': 'B', 'gender': 'M'},
-      {'id': 'C', 'name': '中村 幸子', 'room': '105', 'bed': 'A', 'gender': 'F'},
-      {'id': 'D', 'name': '加藤 健一', 'room': '105', 'bed': 'B', 'gender': 'M'},
-      {'id': 'E', 'name': '吉田 直樹', 'room': '106', 'bed': 'A', 'gender': 'M'},
-      {'id': 'G', 'name': '山本 美咲', 'room': '106', 'bed': 'B', 'gender': 'F'},
-      {'id': 'H', 'name': '佐々木 健', 'room': '107', 'bed': 'A', 'gender': 'M'},
-      {'id': 'I', 'name': '井上 花子', 'room': '107', 'bed': 'B', 'gender': 'F'},
-      {'id': 'N', 'name': '木村 太一', 'room': '108', 'bed': 'A', 'gender': 'M'},
-      {'id': 'O', 'name': '林 明美', 'room': '108', 'bed': 'B', 'gender': 'F'},
-      {'id': 'P', 'name': '斎藤 健二', 'room': '109', 'bed': 'A', 'gender': 'M'},
-      {'id': 'Q', 'name': '清水 さくら', 'room': '109', 'bed': 'B', 'gender': 'F'},
-      {'id': 'S', 'name': '山下 隆史', 'room': '110', 'bed': 'A', 'gender': 'M'},
-      {'id': 'T', 'name': '松本 恵子', 'room': '110', 'bed': 'B', 'gender': 'F'},
-    ];
-
-    final assignedPatients = ['A', 'F', 'M', 'K', 'J', 'L', 'V', 'R'];
 
     return Scaffold(
       appBar: AppBar(
@@ -45,79 +65,114 @@ class PatientSelectionScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      '担当ナース: 社畜',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '病棟患者総数: ${patients.length}名',
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '受け持ち患者数: ${assignedPatients.length}名',
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: patients.length,
-              padding: const EdgeInsets.all(16),
-              itemBuilder: (context, index) {
-                final patient = patients[index];
-                final isAssigned = assignedPatients.contains(patient['id']);
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: _screenDataFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor:
-                          patient['gender'] == 'M' ? Colors.blue : Colors.pink,
-                      child: const Icon(Icons.person, color: Colors.white),
-                    ),
-                    title: Text(patient['name']!),
-                    subtitle: Text('${patient['room']}号室 ${patient['bed']}床'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
+          if (snapshot.hasError) {
+            return Center(
+              child: Text('エラーが発生しました: ${snapshot.error}'),
+            );
+          }
+
+          final data = snapshot.data!;
+          final userData = data['userData'] as Map<String, dynamic>;
+          final patients = data['patients'] as List<Map<String, dynamic>>;
+
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          isAssigned
-                              ? Icons.check_circle
-                              : Icons.add_circle_outline,
-                          color: isAssigned ? Colors.blue : Colors.grey,
+                        Text(
+                          '担当ナース: ${userData['name']}',
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
                         ),
-                        const Icon(Icons.arrow_forward_ios),
+                        const SizedBox(height: 8),
+                        Text(
+                          '病棟患者総数: ${patients.length}名',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '受け持ち患者数: ${patients.where((p) => p['isAssigned']).length}名',
+                          style: const TextStyle(fontSize: 16),
+                        ),
                       ],
                     ),
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        '/patient_detail',
-                        arguments: patient,
-                      );
-                    },
                   ),
-                );
-              },
-            ),
-          ),
-        ],
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: patients.length,
+                  padding: const EdgeInsets.all(16),
+                  itemBuilder: (context, index) {
+                    final patient = patients[index];
+                    final isAssigned = patient['isAssigned'] as bool;
+
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: patient['gender'] == 'M'
+                              ? Colors.blue
+                              : Colors.pink,
+                          child: const Icon(Icons.person, color: Colors.white),
+                        ),
+                        title: Text(patient['name']!),
+                        subtitle:
+                            Text('${patient['room']}号室 ${patient['bed']}床'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if ((patient['assignedNurses'] as List)
+                                .isNotEmpty) ...[
+                              Tooltip(
+                                message:
+                                    '担当: ${(patient['assignedNurses'] as List).map((nurse) => nurse['name']).join(', ')}',
+                                child: Badge(
+                                  label: Text(
+                                    (patient['assignedNurses'] as List)
+                                        .length
+                                        .toString(),
+                                  ),
+                                  child: Icon(
+                                    Icons.people,
+                                    color:
+                                        isAssigned ? Colors.blue : Colors.grey,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            const Icon(Icons.arrow_forward_ios),
+                          ],
+                        ),
+                        onTap: () {
+                          Navigator.pushNamed(
+                            context,
+                            '/patient_detail',
+                            arguments: patient,
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

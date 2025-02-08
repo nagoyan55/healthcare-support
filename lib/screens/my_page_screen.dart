@@ -63,7 +63,8 @@ class _StaffTaskTabState extends State<_StaffTaskTab> {
                   child: ListTile(
                     leading: const Icon(Icons.task_alt),
                     title: Text(todo['title'] as String),
-                    subtitle: Text('期限: ${_formatDeadline(todo['deadline'] as Timestamp)}'),
+                    subtitle: Text(
+                        '期限: ${_formatDeadline(todo['deadline'] as Timestamp)}'),
                     trailing: Checkbox(
                       value: todo['isCompleted'] as bool,
                       onChanged: (value) async {
@@ -160,7 +161,8 @@ class _StaffChatTabState extends State<_StaffChatTab> {
                     ),
                     title: Text(chat['title'] as String),
                     subtitle: Text(chat['lastMessage'] as String),
-                    trailing: Text(_formatTimestamp(chat['lastMessageTime'] as Timestamp)),
+                    trailing: Text(
+                        _formatTimestamp(chat['lastMessageTime'] as Timestamp)),
                     onTap: () {
                       Navigator.pushNamed(
                         context,

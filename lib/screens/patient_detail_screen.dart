@@ -8,8 +8,8 @@ class PatientDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Map<String, String> patient =
-        (ModalRoute.of(context)?.settings.arguments as Map<String, String>?) ??
+    final Map<String, dynamic> patient =
+        (ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?) ??
             {
               'id': 'A',
               'name': '山田 太郎',
@@ -51,8 +51,8 @@ class PatientDetailScreen extends StatelessWidget {
         body: TabBarView(
           children: [
             ProfileTabScreen(patient: patient),
-            const ChatTabScreen(),
-            const TodoTabScreen(),
+            ChatTabScreen(patientId: patient['id']),
+            TodoTabScreen(patientId: patient['id']),
           ],
         ),
       ),

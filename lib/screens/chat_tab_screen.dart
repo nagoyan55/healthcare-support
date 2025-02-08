@@ -20,8 +20,8 @@ class ChatMessage {
   final bool isCurrentUser;
   final String avatarText;
   final List<Reaction> reactions;
-  final String? quotedEhr; // 電子カルテからの引用
-  final bool isShared; // 他の医療従事者と共有されているか
+  final String? quotedEhr;
+  final bool isShared;
 
   ChatMessage({
     required this.id,
@@ -61,7 +61,12 @@ class ChatMessage {
 }
 
 class ChatTabScreen extends StatefulWidget {
-  const ChatTabScreen({super.key});
+  final String patientId;
+
+  const ChatTabScreen({
+    super.key,
+    required this.patientId,
+  });
 
   @override
   State<ChatTabScreen> createState() => _ChatTabScreenState();
@@ -72,8 +77,8 @@ class _ChatTabScreenState extends State<ChatTabScreen> {
   final ChatService _chatService = ChatService();
   String? _selectedEhr;
   List<ChatMessage> _messages = [];
-  String _currentUserId = 'demo-user'; // TODO: 認証から取得
-  String _currentUserName = '鈴木看護師'; // TODO: 認証から取得
+  String _currentUserId = 'demo-user';
+  String _currentUserName = '鈴木看護師';
 
   @override
   void initState() {
@@ -83,7 +88,7 @@ class _ChatTabScreenState extends State<ChatTabScreen> {
 
   Future<void> _loadMessages() async {
     try {
-      final messagesStream = _chatService.getMessages('patient-1'); // TODO: 患者IDを動的に取得
+      final messagesStream = _chatService.getMessages(widget.patientId);
       messagesStream.listen((messages) {
         setState(() {
           _messages = messages.map((data) {
@@ -148,13 +153,12 @@ class _ChatTabScreenState extends State<ChatTabScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // 実際の実装では電子カルテAPIから取得
                 ListTile(
                   title: const Text('最新のバイタル'),
-                  subtitle: const Text('血圧: 132/85 mmHg\n脈拍: 75/分\n体温: 36.5℃'),
+                  subtitle: const Text('血圧: 132/85 mmHg\n脈拍: 75/分\n体温: 36.5°C'),
                   onTap: () {
                     setState(() {
-                      _selectedEhr = '血圧: 132/85 mmHg\n脈拍: 75/分\n体温: 36.5℃';
+                      _selectedEhr = '血圧: 132/85 mmHg\n脈拍: 75/分\n体温: 36.5°C';
                     });
                     Navigator.pop(context);
                   },
@@ -208,7 +212,7 @@ class _ChatTabScreenState extends State<ChatTabScreen> {
                         try {
                           Navigator.pop(context);
                           await _chatService.addReaction(
-                            patientId: 'patient-1', // TODO: 患者IDを動的に取得
+                            patientId: widget.patientId,
                             messageId: message.id,
                             emoji: emoji,
                             userId: _currentUserId,
@@ -242,7 +246,7 @@ class _ChatTabScreenState extends State<ChatTabScreen> {
   Future<void> _shareMessage(ChatMessage message, int index) async {
     try {
       await _chatService.shareMessage(
-        patientId: 'patient-1', // TODO: 患者IDを動的に取得
+        patientId: widget.patientId,
         messageId: message.id,
       );
       ScaffoldMessenger.of(context).showSnackBar(
@@ -265,7 +269,7 @@ class _ChatTabScreenState extends State<ChatTabScreen> {
 
     try {
       await _chatService.sendMessage(
-        patientId: 'patient-1', // TODO: 患者IDを動的に取得
+        patientId: widget.patientId,
         senderId: _currentUserId,
         message: _messageController.text,
         quotedEhr: _selectedEhr,
@@ -274,7 +278,6 @@ class _ChatTabScreenState extends State<ChatTabScreen> {
       _messageController.clear();
       _selectedEhr = null;
 
-      // スクロールを一番下に移動
       Future.delayed(const Duration(milliseconds: 100), () {
         _scrollController.animateTo(
           0,
@@ -335,7 +338,6 @@ class _ChatTabScreenState extends State<ChatTabScreen> {
               final message = _messages[_messages.length - 1 - index];
               final messageDate = _formatDate(message.timestamp);
 
-              // 日付区切りの表示判定
               Widget? dateWidget;
               if (currentDate != messageDate) {
                 dateWidget = Center(

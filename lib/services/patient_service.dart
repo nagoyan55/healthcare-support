@@ -77,19 +77,75 @@ class PatientService {
     }
   }
 
-  // 特定の病棟の患者一覧を取得
-  Future<List<Map<String, dynamic>>> getPatientsByWard(String ward) async {
+  // 病棟の患者一覧を取得(担当ナース情報付き)
+  Future<List<Map<String, dynamic>>> getPatientsByWard(String ward,
+      {String? nurseId}) async {
     try {
-      final snapshot = await _firestore
+      print('Getting patients for ward: $ward');
+
+      // まず病棟の患者を取得
+      final patientsSnapshot = await _firestore
           .collection('patients')
           .where('basicInfo.ward', isEqualTo: ward)
           .get();
 
-      return snapshot.docs.map((doc) {
+      print('Found ${patientsSnapshot.docs.length} patients');
+      for (var doc in patientsSnapshot.docs) {
+        print('Patient: ${doc.id} - ${doc.data()}');
+      }
+
+      // 全ての担当ナース情報を取得
+      final assignedPatientsSnapshot =
+          await _firestore.collection('assigned_patients').get();
+
+      print(
+          'Found ${assignedPatientsSnapshot.docs.length} assigned patients records');
+      for (var doc in assignedPatientsSnapshot.docs) {
+        print('Assigned patients for nurse ${doc.id}: ${doc.data()}');
+      }
+
+      // 患者IDごとの担当ナース情報をマッピング
+      Map<String, List<Map<String, dynamic>>> assignedNurses = {};
+
+      for (var doc in assignedPatientsSnapshot.docs) {
+        final nurseId = doc.id;
         final data = doc.data();
+        final patients = data['patients'] as List;
+
+        // ナースの情報を取得
+        final nurseDoc =
+            await _firestore.collection('users').doc(nurseId).get();
+
+        if (!nurseDoc.exists) continue;
+        final nurseData = nurseDoc.data()!;
+
+        // 各患者に対して担当ナース情報を追加
+        for (var patient in patients) {
+          final patientId = patient['patientId'] as String;
+          if (!assignedNurses.containsKey(patientId)) {
+            assignedNurses[patientId] = [];
+          }
+          assignedNurses[patientId]!.add({
+            'id': nurseId,
+            'name': nurseData['name'],
+            'assignedAt': patient['assignedAt'],
+            'isCurrentUser': doc.id == nurseId
+          });
+        }
+      }
+
+      // 患者情報に担当ナース情報を付加
+      return patientsSnapshot.docs.map((doc) {
+        final data = doc.data();
+        final patientId = doc.id;
+        final patientNurses = assignedNurses[patientId] ?? [];
+
         return <String, dynamic>{
-          'id': doc.id,
+          'id': patientId,
           ...Map<String, dynamic>.from(data['basicInfo'] as Map),
+          'assignedNurses': patientNurses,
+          'isAssigned': nurseId != null &&
+              patientNurses.any((nurse) => nurse['id'] == nurseId),
         };
       }).toList();
     } catch (e) {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/patient_service.dart';
 
 class ProfileTabScreen extends StatefulWidget {
-  final Map<String, String> patient;
+  final Map<String, dynamic> patient;
 
   const ProfileTabScreen({
     super.key,
@@ -14,7 +14,8 @@ class ProfileTabScreen extends StatefulWidget {
 }
 
 class _ProfileTabScreenState extends State<ProfileTabScreen> {
-  final TextEditingController _presentIllnessController = TextEditingController();
+  final TextEditingController _presentIllnessController =
+      TextEditingController();
   final PatientService _patientService = PatientService();
   String _summarizedIllness = '';
   List<Map<String, dynamic>> _medicalHistory = [];
@@ -35,9 +36,11 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
 
   Future<void> _loadPatientData() async {
     try {
-      final history = await _patientService.getMedicalHistory(widget.patient['id']!);
-      final condition = await _patientService.getCurrentCondition(widget.patient['id']!);
-      
+      final history =
+          await _patientService.getMedicalHistory(widget.patient['id']!);
+      final condition =
+          await _patientService.getCurrentCondition(widget.patient['id']!);
+
       setState(() {
         _medicalHistory = history;
         _currentCondition = condition;
@@ -141,15 +144,16 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
                     ),
                     const SizedBox(height: 16),
                     ..._medicalHistory.map((history) => Column(
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.medical_information),
-                          title: Text(history['condition'] as String),
-                          subtitle: Text(history['details'] as String),
-                        ),
-                        if (_medicalHistory.last != history) const Divider(),
-                      ],
-                    )).toList(),
+                          children: [
+                            ListTile(
+                              leading: const Icon(Icons.medical_information),
+                              title: Text(history['condition'] as String),
+                              subtitle: Text(history['details'] as String),
+                            ),
+                            if (_medicalHistory.last != history)
+                              const Divider(),
+                          ],
+                        )),
                   ],
                 ),
               ),
@@ -218,7 +222,8 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
                       onChanged: (value) async {
                         if (value.length >= 2) {
                           try {
-                            final records = await _patientService.searchMedicalRecords(
+                            final records =
+                                await _patientService.searchMedicalRecords(
                               widget.patient['id']!,
                               value,
                             );
@@ -241,15 +246,15 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
                     ),
                     const SizedBox(height: 16),
                     ..._searchResults.map((record) => Column(
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.article),
-                          title: Text(record['title'] as String),
-                          subtitle: Text(record['content'] as String),
-                        ),
-                        if (_searchResults.last != record) const Divider(),
-                      ],
-                    )).toList(),
+                          children: [
+                            ListTile(
+                              leading: const Icon(Icons.article),
+                              title: Text(record['title'] as String),
+                              subtitle: Text(record['content'] as String),
+                            ),
+                            if (_searchResults.last != record) const Divider(),
+                          ],
+                        )),
                   ],
                 ),
               ),
