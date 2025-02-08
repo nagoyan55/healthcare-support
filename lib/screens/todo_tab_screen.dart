@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/todo_service.dart';
+import '../widgets/todo_list.dart';
 
 class TodoTabScreen extends StatefulWidget {
   final String patientId;
@@ -16,31 +16,8 @@ class TodoTabScreen extends StatefulWidget {
 
 class _TodoTabScreenState extends State<TodoTabScreen> {
   final TodoService _todoService = TodoService();
-  List<Map<String, dynamic>> _todos = [];
-  final String _currentUserId = 'demo-user';
 
-  @override
-  void initState() {
-    super.initState();
-    _loadTodos();
-  }
-
-  Future<void> _loadTodos() async {
-    try {
-      final todosStream = _todoService.getTodos(widget.patientId);
-      todosStream.listen((todos) {
-        setState(() {
-          _todos = todos;
-        });
-      });
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('TODOリストの取得に失敗しました')),
-        );
-      }
-    }
-  }
+  final String _currentUserId = 'demo-user'; // TODO: 認証から取得
 
   void _addTodo() {
     showDialog(
@@ -142,37 +119,87 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        TextButton(
-                          onPressed: () async {
-                            final date = await showDatePicker(
-                              context: context,
-                              initialDate: selectedDate,
-                              firstDate: DateTime.now(),
-                              lastDate:
-                                  DateTime.now().add(const Duration(days: 365)),
-                              builder: (context, child) {
-                                return Theme(
-                                  data: Theme.of(context).copyWith(
-                                    colorScheme: ColorScheme.light(
-                                      primary:
-                                          Theme.of(context).colorScheme.primary,
-                                    ),
-                                  ),
-                                  child: child!,
+                        Row(
+                          children: [
+                            TextButton(
+                              onPressed: () async {
+                                final date = await showDatePicker(
+                                  context: context,
+                                  initialDate: selectedDate,
+                                  firstDate: DateTime.now(),
+                                  lastDate:
+                                      DateTime.now().add(const Duration(days: 365)),
+                                  builder: (context, child) {
+                                    return Theme(
+                                      data: Theme.of(context).copyWith(
+                                        colorScheme: ColorScheme.light(
+                                          primary:
+                                              Theme.of(context).colorScheme.primary,
+                                        ),
+                                      ),
+                                      child: child!,
+                                    );
+                                  },
                                 );
+                                if (date != null) {
+                                  setState(() {
+                                    selectedDate = DateTime(
+                                      date.year,
+                                      date.month,
+                                      date.day,
+                                      selectedDate.hour,
+                                      selectedDate.minute,
+                                    );
+                                  });
+                                }
                               },
-                            );
-                            if (date != null) {
-                              setState(() => selectedDate = date);
-                            }
-                          },
-                          style: TextButton.styleFrom(
-                            foregroundColor:
-                                Theme.of(context).colorScheme.primary,
-                          ),
-                          child: Text(
-                            '${selectedDate.year}/${selectedDate.month}/${selectedDate.day}',
-                          ),
+                              style: TextButton.styleFrom(
+                                foregroundColor:
+                                    Theme.of(context).colorScheme.primary,
+                              ),
+                              child: Text(
+                                '${selectedDate.year}/${selectedDate.month}/${selectedDate.day}',
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            TextButton(
+                              onPressed: () async {
+                                final time = await showTimePicker(
+                                  context: context,
+                                  initialTime: TimeOfDay.fromDateTime(selectedDate),
+                                  builder: (context, child) {
+                                    return Theme(
+                                      data: Theme.of(context).copyWith(
+                                        colorScheme: ColorScheme.light(
+                                          primary:
+                                              Theme.of(context).colorScheme.primary,
+                                        ),
+                                      ),
+                                      child: child!,
+                                    );
+                                  },
+                                );
+                                if (time != null) {
+                                  setState(() {
+                                    selectedDate = DateTime(
+                                      selectedDate.year,
+                                      selectedDate.month,
+                                      selectedDate.day,
+                                      time.hour,
+                                      time.minute,
+                                    );
+                                  });
+                                }
+                              },
+                              style: TextButton.styleFrom(
+                                foregroundColor:
+                                    Theme.of(context).colorScheme.primary,
+                              ),
+                              child: Text(
+                                '${selectedDate.hour.toString().padLeft(2, '0')}:${selectedDate.minute.toString().padLeft(2, '0')}',
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -234,176 +261,13 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
     );
   }
 
-  String _formatDeadline(Timestamp timestamp) {
-    final date = timestamp.toDate();
-    return '${date.year}/${date.month}/${date.day} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
-  }
-
   @override
   Widget build(BuildContext context) {
-    _todos.sort((a, b) => (a['deadline'] as Timestamp)
-        .toDate()
-        .compareTo((b['deadline'] as Timestamp).toDate()));
-
-    return Stack(
-      children: [
-        Container(
-          color: const Color(0xFFF8F9FA),
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16.0),
-            itemCount: _todos.length,
-            itemBuilder: (context, index) {
-              final todo = _todos[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12.0),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.85,
-                    ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8.0),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: IntrinsicHeight(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Container(
-                              width: 4,
-                              decoration: BoxDecoration(
-                                color: todo['isCompleted'] as bool
-                                    ? Theme.of(context).colorScheme.secondary
-                                    : Theme.of(context).colorScheme.primary,
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(8.0),
-                                  bottomLeft: Radius.circular(8.0),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Transform.scale(
-                                      scale: 1.2,
-                                      child: Checkbox(
-                                        value: todo['isCompleted'] as bool,
-                                        onChanged: (value) async {
-                                          try {
-                                            await _todoService.updateTodoStatus(
-                                              patientId: widget.patientId,
-                                              todoId: todo['id'] as String,
-                                              isCompleted: value!,
-                                            );
-                                          } catch (e) {
-                                            if (mounted) {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                const SnackBar(
-                                                    content: Text(
-                                                        'タスクの状態更新に失敗しました')),
-                                              );
-                                            }
-                                          }
-                                        },
-                                        activeColor: Theme.of(context)
-                                            .colorScheme
-                                            .secondary,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(3),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            todo['title'] as String,
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w500,
-                                              decoration: todo['isCompleted']
-                                                      as bool
-                                                  ? TextDecoration.lineThrough
-                                                  : TextDecoration.none,
-                                              color: todo['isCompleted'] as bool
-                                                  ? Colors.grey
-                                                  : Colors.black87,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            todo['description'] as String,
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: todo['isCompleted'] as bool
-                                                  ? Colors.grey
-                                                  : Colors.black54,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFFF1F3F4),
-                                              borderRadius:
-                                                  BorderRadius.circular(4),
-                                            ),
-                                            child: Text(
-                                              '期限: ${_formatDeadline(todo['deadline'] as Timestamp)}',
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.black54,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        Positioned(
-          right: 16,
-          bottom: 16,
-          child: FloatingActionButton.extended(
-            onPressed: _addTodo,
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            icon: const Icon(Icons.add),
-            label: const Text('新規タスク'),
-          ),
-        ),
-      ],
+    return TodoList(
+      todoStream: _todoService.getTodos(widget.patientId),
+      showAddButton: true,
+      patientId: widget.patientId,
+      onAddPressed: _addTodo,
     );
   }
 }

@@ -147,7 +147,30 @@ class TodoService {
     }
   }
 
-  // 担当者のTODOを取得
+  // 担当者のTODOをストリームで取得
+  Stream<List<Map<String, dynamic>>> getTodosByAssigneeStream(String userId) {
+    return _firestore
+        .collectionGroup('tasks')
+        .where('assignedTo', isEqualTo: userId)
+        .snapshots()
+        .asyncMap((snapshot) async {
+      final todos = <Map<String, dynamic>>[];
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final patientId = doc.reference.parent.parent!.id;
+        todos.add({
+          'id': doc.id,
+          'patientId': patientId,
+          ...data,
+        });
+      }
+      return todos
+        ..sort((a, b) =>
+            (a['deadline'] as Timestamp).compareTo(b['deadline'] as Timestamp));
+    });
+  }
+
+  // 担当者のTODOを一括取得
   Future<List<Map<String, dynamic>>> getTodosByAssignee(String userId) async {
     try {
       // 全患者のTODOコレクションから担当者のタスクを検索
