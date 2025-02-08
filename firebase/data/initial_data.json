@@ -1,0 +1,111 @@
+{
+  "users": [
+    {
+      "id": "demo-user",
+      "name": "鈴木看護師",
+      "ward": "内科",
+      "occupation": "看護師",
+      "email": "demo@example.com",
+      "iconIndex": 0,
+      "createdAt": "2025-02-08T14:31:00.000Z"
+    }
+  ],
+  "patients": [
+    {
+      "id": "patient-1",
+      "basicInfo": {
+        "id": "A",
+        "name": "山田 太郎",
+        "room": "101",
+        "bed": "A",
+        "gender": "M",
+        "ward": "内科"
+      },
+      "medicalHistory": [
+        {
+          "condition": "高血圧",
+          "startDate": "2020-04-01T00:00:00.000Z",
+          "details": "服薬治療中"
+        },
+        {
+          "condition": "糖尿病",
+          "startDate": "2021-08-01T00:00:00.000Z",
+          "details": "食事療法中"
+        },
+        {
+          "condition": "腰椎ヘルニア",
+          "startDate": "2019-01-01T00:00:00.000Z",
+          "details": "手術実施"
+        }
+      ],
+      "currentCondition": "血圧管理中"
+    }
+  ],
+  "todos": {
+    "patient-1": {
+      "tasks": [
+        {
+          "title": "血圧測定",
+          "description": "朝・昼・晩の3回測定",
+          "deadline": "2025-02-09T14:31:00.000Z",
+          "assignedTo": "demo-user",
+          "isCompleted": false,
+          "createdAt": "2025-02-08T14:31:00.000Z"
+        },
+        {
+          "title": "服薬確認",
+          "description": "降圧剤の服用確認",
+          "deadline": "2025-02-08T18:31:00.000Z",
+          "assignedTo": "demo-user",
+          "isCompleted": false,
+          "createdAt": "2025-02-08T14:31:00.000Z"
+        },
+        {
+          "title": "リハビリ",
+          "description": "歩行訓練 15分",
+          "deadline": "2025-02-08T20:31:00.000Z",
+          "assignedTo": "demo-user",
+          "isCompleted": false,
+          "createdAt": "2025-02-08T14:31:00.000Z"
+        }
+      ]
+    }
+  },
+  "chats": {
+    "patient-1": {
+      "messages": [
+        {
+          "sender": "demo-doctor",
+          "message": "患者の血圧が高めです。経過観察をお願いします。",
+          "timestamp": "2025-02-07T12:31:00.000Z",
+          "quotedEhr": "血圧: 145/95 mmHg\n脈拍: 78/分\n体温: 36.8°C",
+          "isShared": true,
+          "reactions": [
+            {
+              "emoji": "👍",
+              "user": "demo-user"
+            },
+            {
+              "emoji": "✅",
+              "user": "demo-doctor-2"
+            }
+          ]
+        },
+        {
+          "sender": "demo-user",
+          "message": "承知しました。定期的に測定を行います。",
+          "timestamp": "2025-02-08T13:31:00.000Z",
+          "isShared": true,
+          "reactions": [
+            {
+              "emoji": "👀",
+              "user": "demo-doctor"
+            }
+          ]
+        }
+      ],
+      "participants": ["demo-user", "demo-doctor", "demo-doctor-2"],
+      "lastMessageTime": "2025-02-08T13:31:00.000Z"
+    }
+  }
+}

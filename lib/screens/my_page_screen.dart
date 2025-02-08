@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MyPageScreen extends StatefulWidget {
   const MyPageScreen({super.key});
@@ -157,6 +159,31 @@ class _MyPageScreenState extends State<MyPageScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (doc.exists) {
+          final data = doc.data()!;
+          setState(() {
+            _name = data['name'] ?? '';
+            _selectedWard = data['ward'] ?? '内科';
+            _selectedOccupation = data['occupation'] ?? '看護師';
+            _selectedIconIndex = data['iconIndex'] ?? 0;
+          });
+        }
+      }
+    } catch (e) {
+      print('Error loading user data: $e');
+    }
   }
 
   @override
@@ -173,6 +200,23 @@ class _MyPageScreenState extends State<MyPageScreen>
         appBar: AppBar(
           title: const Text('マイページ'),
           backgroundColor: _selectedColor,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () async {
+                try {
+                  await FirebaseAuth.instance.signOut();
+                  if (!mounted) return;
+                  Navigator.pushReplacementNamed(context, '/login');
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('サインアウトに失敗しました: $e')),
+                  );
+                }
+              },
+            ),
+          ],
           bottom: TabBar(
             controller: _tabController,
             tabs: const [
@@ -383,15 +427,38 @@ class _MyPageScreenState extends State<MyPageScreen>
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          onPressed: () {
+                          onPressed: () async {
                             if (_formKey.currentState!.validate()) {
                               _formKey.currentState!.save();
-                              // TODO: Save user data
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('プロフィールを更新しました'),
-                                ),
-                              );
+                              try {
+                                final user = FirebaseAuth.instance.currentUser;
+                                if (user != null) {
+                                  await FirebaseFirestore.instance
+                                      .collection('users')
+                                      .doc(user.uid)
+                                      .update({
+                                    'name': _name,
+                                    'ward': _selectedWard,
+                                    'occupation': _selectedOccupation,
+                                    'iconIndex': _selectedIconIndex,
+                                    'updatedAt': FieldValue.serverTimestamp(),
+                                  });
+
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('プロフィールを更新しました'),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('プロフィールの更新に失敗しました: $e'),
+                                  ),
+                                );
+                              }
                             }
                           },
                           child: const Text(

@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  firebase:
+    image: andreysenov/firebase-tools
+    ports:
+      - "9099:9099" # Auth
+      - "8080:8080" # Firestore
+      - "4000:4000" # Emulator UI
+    volumes:
+      - ./firebase:/home/node/app
+    working_dir: /home/node/app
+    command: >
+      sh -c "npm install &&
+             npm run emulator"

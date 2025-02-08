@@ -1,0 +1,8 @@
+{
+  "collections": [
+    "users",
+    "patients",
+    "todos",
+    "chats"
+  ]
+}

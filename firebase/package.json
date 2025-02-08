@@ -1,0 +1,13 @@
+{
+  "name": "healthcare-support-firebase",
+  "version": "1.0.0",
+  "description": "Firebase emulator configuration for healthcare support app",
+  "type": "commonjs",
+  "scripts": {
+    "emulator": "firebase emulators:start --import=./data --export-on-exit",
+    "seed": "node seed.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^11.11.1"
+  }
+}
