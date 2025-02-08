@@ -1,116 +1,117 @@
-# healthcare_support
+# Healthcare Support
 
-医療従事者向けの患者管理Flutterアプリケーション。
+看護師向け業務支援アプリケーション。患者情報の閲覧・管理や、医療スタッフ間のコミュニケーションをサポートし、効率的な看護業務の実現を支援します。
 
-## アーキテクチャ
+## 主な機能
 
-```mermaid
-graph TB
-    subgraph "Frontend"
-        App[Flutter App]
-        style App fill:#e1f5fe
-    end
+### 1. 患者情報管理
+- 患者の基本情報(氏名、病室、ベッド番号など)の閲覧
+- 病歴情報の記録と閲覧
 
-    subgraph "Core API (モジュラーモノリス)"
-        REST[REST API]
-        PatientM[患者管理]
-        RoomM[部屋管理]
-        StaffM[スタッフ管理]
-        TaskM[タスク管理]
-        
-        style REST fill:#fff3e0
-        REST --> PatientM & RoomM & StaffM & TaskM
-    end
+### 2. タスク管理
+- 患者ケアに関するタスクの作成と割り当て
+- タスクの進捗管理と完了確認
+- 期限管理とリマインド機能
 
-    subgraph "Chat Service"
-        GRPC[gRPC Server]
-        Chat[チャット管理]
-        style GRPC fill:#f3e5f5
-        GRPC --> Chat
-    end
+### 3. チャット機能
+- 医療スタッフ間のリアルタイムコミュニケーション
+- 患者ごとのチャットルーム
+- メッセージへのリアクション機能
 
-    App --> REST
-    App --> GRPC
+## 技術スタック
+
+- **フロントエンド**: Flutter/Dart
+- **バックエンド**: Firebase (Authentication, Cloud Firestore)
+- **開発環境**: Docker
+
+## 開発環境のセットアップ
+
+### 必要なツール
+
+1. Flutter SDK
+2. Docker Desktop
+3. Node.js
+
+### セットアップ手順
+
+1. リポジトリのクローン
+```bash
+git clone [repository-url]
+cd healthcare_support
 ```
 
-## バックエンドアーキテクチャ
+2. Flutter依存関係のインストール
+```bash
+flutter pub get
+```
 
-バックエンドは2つの主要なサービスで構成されています：
+3. Firebaseエミュレータ用のパッケージインストール
+```bash
+cd firebase
+npm install
+cd ..
+```
 
-### Core API (モジュラーモノリス)
-- RESTful API
-- 以下のリソースを管理：
-  - 患者情報
-  - 部屋情報
-  - スタッフ情報
-  - タスク管理
+## アプリケーションの起動方法
 
-### Chat Service
-- gRPCベースの双方向ストリーミング通信
-- 医療スタッフ間のチャット機能を提供
-- 主な機能：
-  - 双方向ストリーミングによるリアルタイムチャット
-  - ルーム参加/退出の管理
-  - アクティブユーザーの追跡
+### 1. Firebaseエミュレータの起動
 
-## API仕様
+```bash
+docker-compose up -d
+```
 
-APIの詳細仕様は以下のファイルで定義されています：
+エミュレータUIは以下のURLでアクセス可能です:
+- http://localhost:4000
 
-- [Core API仕様書](api/schemas/core-api.yaml) - REST APIの詳細仕様
-- [Chat Service Proto](api/protos/chat.proto) - gRPCサービスの定義
+### 2. 初期データの投入
 
-## ページ構成
+```bash
+cd firebase
+node scripts/seed.js
+cd ..
+```
 
-アプリケーションは以下の2つの主要な画面で構成されています：
+### 3. Flutterアプリの起動
 
-### 患者選択画面 (Patient Selection Screen)
-`lib/screens/patient_selection_screen.dart`
+```bash
+flutter run
+```
 
-患者一覧を表示し、詳細確認したい患者を選択するための画面です。
+## デモアカウント
 
-機能：
-- 患者一覧の表示
-- 各患者の基本情報（名前、部屋番号）の表示
-- 患者詳細画面への遷移機能
+以下のアカウントで動作確認が可能です:
 
-### 患者詳細画面 (Patient Detail Screen)
-`lib/screens/patient_detail_screen.dart`
+- **メールアドレス**: demo@example.com
+- **パスワード**: password123
+- **表示名**: 鈴木看護師
 
-選択された患者の詳細情報を表示する画面です。
-3つのタブで構成されています：
+## 初期データについて
 
-1. プロフィールタブ
-   - 患者ID
-   - 年齢
-   - 血液型
-   - 部屋番号
-   - 入院日
-   - 担当医
+### データ構造
+
+1. **patients**: 患者情報
+   - 基本情報(氏名、病室、ベッド番号)
+   - 病歴
    - 現在の状態
-   など、患者の基本情報を表示
 
-2. チャットタブ
-   - 医療スタッフ間のコミュニケーション機能
-   - gRPCストリーミングによるリアルタイムメッセージング
-   - チャット履歴の表示
-   - ルーム参加者のステータス表示
+2. **users**: ユーザー情報
+   - 看護師情報
+   - アカウント設定
 
-3. TODOタブ
-   - 患者に関するタスク管理
-   - タスクの追加機能
-   - タスクの完了状態の管理
-   - タスクの期限表示
+3. **todos**: タスク情報
+   - 患者ケアのタスク
+   - 担当者の割り当て
+   - 期限と進捗状況
 
-## Getting Started
+4. **chats**: チャット情報
+   - メッセージ履歴
+   - 参加者情報
+   - リアクション情報
 
-This project is a starting point for a Flutter application.
+### サンプルデータ
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+初期データには以下が含まれています:
+- サンプル患者データ
+- 看護師データ
+- タスクデータ
+- チャットデータ
