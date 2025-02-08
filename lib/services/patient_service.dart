@@ -39,11 +39,40 @@ class PatientService {
     }
   }
 
+  // 患者情報の要約を取得(一回のみ)
+  Future<String?> getPatientSummary(String patientId) async {
+    try {
+      final doc = await _firestore
+          .collection('patient_summaries')
+          .doc(patientId)
+          .get();
+      return doc.data()?['content'] as String?;
+    } catch (e) {
+      log('Error getting patient summary: $e');
+      return null;
+    }
+  }
+
+  // 患者情報の要約をStreamで取得
+  Stream<String?> getPatientSummaryStream(String patientId) {
+    return _firestore
+        .collection('patient_summaries')
+        .doc(patientId)
+        .snapshots()
+        .map((doc) => doc.data()?['content'] as String?);
+  }
+
   Future<void> updateCurrentCondition(
       String patientId, String condition) async {
     try {
-      await _firestore.collection('patients').doc(patientId).update({
+      final doc = await _firestore.collection('patients').doc(patientId).get();
+      final data = doc.data()!;
+      await _firestore.collection('patients').doc(patientId).set({
+        'id': patientId,
+        'basicInfo': data['basicInfo'],
+        'medicalHistory': data['medicalHistory'],
         'currentCondition': condition,
+        'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
       log('Error updating current condition: $e');

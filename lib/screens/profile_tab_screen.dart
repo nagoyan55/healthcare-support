@@ -39,7 +39,6 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
           await _patientService.getMedicalHistory(widget.patient['id']!);
       final condition =
           await _patientService.getCurrentCondition(widget.patient['id']!);
-
       setState(() {
         _medicalHistory = history;
         if (condition != null) {
@@ -64,6 +63,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
         widget.patient['id']!,
         _presentIllnessController.text,
       );
+      
       setState(() {
         _summarizedIllness = _presentIllnessController.text.length > 100
             ? '${_presentIllnessController.text.substring(0, 100)}...'
@@ -182,18 +182,43 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
                       onPressed: _updateCurrentCondition,
                       child: const Text('更新する'),
                     ),
-                    if (_summarizedIllness.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      const Text(
-                        '要約:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'AI要約:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
-                      const SizedBox(height: 8),
-                      Text(_summarizedIllness),
-                    ],
+                    ),
+                    const SizedBox(height: 8),
+                    StreamBuilder<String?>(
+                      stream: _patientService.getPatientSummaryStream(widget.patient['id']!),
+                      builder: (context, snapshot) {
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Colors.grey[300]!,
+                              width: 1,
+                            ),
+                          ),
+                          child: snapshot.hasData && snapshot.data != null
+                              ? Text(
+                                  snapshot.data!,
+                                  style: const TextStyle(height: 1.5),
+                                )
+                              : const Text(
+                                  '現病歴を更新すると、AI要約が生成されます',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),

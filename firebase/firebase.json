@@ -1,4 +1,11 @@
 {
+  "functions": {
+    "source": "functions",
+    "predeploy": [
+      "npm --prefix functions run build"
+    ],
+    "runtime": "nodejs22"
+  },
   "firestore": {
     "rules": "firestore.rules"
   },
@@ -9,6 +16,10 @@
     },
     "firestore": {
       "port": 8080,
+      "host": "0.0.0.0"
+    },
+    "functions": {
+      "port": 5001,
       "host": "0.0.0.0"
     },
     "ui": {

@@ -5,9 +5,12 @@ services:
     volumes:
       - ./firebase:/home/node/app
       - ./firebase/data:/home/node/data
+    env_file:
+      - ./firebase/.env
     ports:
       - "4000:4000"  # Emulator Suite UI
       - "9099:9099"  # Auth
       - "8080:8080"  # Cloud Firestore
+      - "5001:5001"  # Cloud Functions
     working_dir: /home/node/app
-    command: firebase emulators:start --import=/home/node/data --export-on-exit=/home/node/data
+    command: firebase emulators:start --debug --only auth,firestore,functions

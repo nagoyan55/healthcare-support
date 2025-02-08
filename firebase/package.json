@@ -8,6 +8,7 @@
     "seed": "node scripts/seed.js"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.21.0",
     "firebase-admin": "^11.11.1"
   }
 }

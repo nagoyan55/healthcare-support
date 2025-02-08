@@ -1,1 +1,3 @@
 firebase-export*
+firebase-admin-key.json
+.env
