@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/todo_service.dart';
+import '../services/chat_service.dart';
 
 class MyPageScreen extends StatefulWidget {
   const MyPageScreen({super.key});
@@ -9,71 +11,80 @@ class MyPageScreen extends StatefulWidget {
   State<MyPageScreen> createState() => _MyPageScreenState();
 }
 
-class _StaffTaskTab extends StatelessWidget {
+class _StaffTaskTab extends StatefulWidget {
+  @override
+  State<_StaffTaskTab> createState() => _StaffTaskTabState();
+}
+
+class _StaffTaskTabState extends State<_StaffTaskTab> {
+  final TodoService _todoService = TodoService();
+  List<Map<String, dynamic>> _todos = [];
+  String _currentUserId = 'demo-user'; // TODO: 認証から取得
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTodos();
+  }
+
+  Future<void> _loadTodos() async {
+    try {
+      final todos = await _todoService.getTodosByAssignee(_currentUserId);
+      setState(() {
+        _todos = todos;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('タスクの取得に失敗しました')),
+        );
+      }
+    }
+  }
+
+  String _formatDeadline(Timestamp timestamp) {
+    final date = timestamp.toDate();
+    return '${date.year}/${date.month}/${date.day} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          // タスク追加フォーム
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  const TextField(
-                    decoration: InputDecoration(
-                      labelText: '新しいタスク',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.add_task),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      child: const Text(
-                        'タスクを追加',
-                        style: TextStyle(color: Colors.black87),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
           // タスクリスト
           Expanded(
-            child: ListView(
-              children: const [
-                Card(
+            child: ListView.builder(
+              itemCount: _todos.length,
+              itemBuilder: (context, index) {
+                final todo = _todos[index];
+                return Card(
                   child: ListTile(
-                    leading: Icon(Icons.task_alt),
-                    title: Text('患者Aさんのバイタルチェック'),
-                    subtitle: Text('期限: 2025/1/27 15:00'),
-                    trailing: Icon(Icons.check_box_outline_blank),
+                    leading: const Icon(Icons.task_alt),
+                    title: Text(todo['title'] as String),
+                    subtitle: Text('期限: ${_formatDeadline(todo['deadline'] as Timestamp)}'),
+                    trailing: Checkbox(
+                      value: todo['isCompleted'] as bool,
+                      onChanged: (value) async {
+                        try {
+                          await _todoService.updateTodoStatus(
+                            patientId: todo['patientId'] as String,
+                            todoId: todo['id'] as String,
+                            isCompleted: value!,
+                          );
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('タスクの状態更新に失敗しました')),
+                            );
+                          }
+                        }
+                      },
+                    ),
                   ),
-                ),
-                Card(
-                  child: ListTile(
-                    leading: Icon(Icons.task_alt),
-                    title: Text('カンファレンス資料作成'),
-                    subtitle: Text('期限: 2025/1/28 10:00'),
-                    trailing: Icon(Icons.check_box_outline_blank),
-                  ),
-                ),
-                Card(
-                  child: ListTile(
-                    leading: Icon(Icons.task_alt),
-                    title: Text('新人看護師の指導'),
-                    subtitle: Text('期限: 2025/1/28 13:00'),
-                    trailing: Icon(Icons.check_box_outline_blank),
-                  ),
-                ),
-              ],
+                );
+              },
             ),
           ),
         ],
@@ -82,7 +93,53 @@ class _StaffTaskTab extends StatelessWidget {
   }
 }
 
-class _StaffChatTab extends StatelessWidget {
+class _StaffChatTab extends StatefulWidget {
+  @override
+  State<_StaffChatTab> createState() => _StaffChatTabState();
+}
+
+class _StaffChatTabState extends State<_StaffChatTab> {
+  final ChatService _chatService = ChatService();
+  List<Map<String, dynamic>> _chats = [];
+  String _currentUserId = 'demo-user'; // TODO: 認証から取得
+
+  @override
+  void initState() {
+    super.initState();
+    _loadChats();
+  }
+
+  Future<void> _loadChats() async {
+    try {
+      final chats = await _chatService.getChatParticipants(_currentUserId);
+      setState(() {
+        _chats = chats;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('チャット一覧の取得に失敗しました')),
+        );
+      }
+    }
+  }
+
+  String _formatTimestamp(Timestamp timestamp) {
+    final now = DateTime.now();
+    final date = timestamp.toDate();
+    final difference = now.difference(date);
+
+    if (difference.inMinutes < 1) {
+      return 'たった今';
+    } else if (difference.inHours < 1) {
+      return '${difference.inMinutes}分前';
+    } else if (difference.inDays < 1) {
+      return '${difference.inHours}時間前';
+    } else {
+      return '${date.month}/${date.day} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -91,33 +148,29 @@ class _StaffChatTab extends StatelessWidget {
         children: [
           // チャットリスト
           Expanded(
-            child: ListView(
-              children: const [
-                Card(
+            child: ListView.builder(
+              itemCount: _chats.length,
+              itemBuilder: (context, index) {
+                final chat = _chats[index];
+                return Card(
                   child: ListTile(
-                    leading: CircleAvatar(child: Icon(Icons.person)),
-                    title: Text('田中医師'),
-                    subtitle: Text('患者Bさんの状態について相談があります'),
-                    trailing: Text('5分前'),
+                    leading: CircleAvatar(
+                      child: Icon(Icons.person),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                    ),
+                    title: Text(chat['title'] as String),
+                    subtitle: Text(chat['lastMessage'] as String),
+                    trailing: Text(_formatTimestamp(chat['lastMessageTime'] as Timestamp)),
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        '/patient_detail',
+                        arguments: {'id': chat['patientId'] as String},
+                      );
+                    },
                   ),
-                ),
-                Card(
-                  child: ListTile(
-                    leading: CircleAvatar(child: Icon(Icons.person)),
-                    title: Text('鈴木看護師'),
-                    subtitle: Text('申し送り事項があります'),
-                    trailing: Text('30分前'),
-                  ),
-                ),
-                Card(
-                  child: ListTile(
-                    leading: CircleAvatar(child: Icon(Icons.person)),
-                    title: Text('佐藤薬剤師'),
-                    subtitle: Text('新しい処方箋について確認したいことがあります'),
-                    trailing: Text('1時間前'),
-                  ),
-                ),
-              ],
+                );
+              },
             ),
           ),
         ],

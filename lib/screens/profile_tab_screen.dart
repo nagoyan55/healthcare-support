@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/patient_service.dart';
 
 class ProfileTabScreen extends StatefulWidget {
   final Map<String, String> patient;
@@ -13,9 +14,18 @@ class ProfileTabScreen extends StatefulWidget {
 }
 
 class _ProfileTabScreenState extends State<ProfileTabScreen> {
-  final TextEditingController _presentIllnessController =
-      TextEditingController();
+  final TextEditingController _presentIllnessController = TextEditingController();
+  final PatientService _patientService = PatientService();
   String _summarizedIllness = '';
+  List<Map<String, dynamic>> _medicalHistory = [];
+  List<Map<String, dynamic>> _searchResults = [];
+  String? _currentCondition;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPatientData();
+  }
 
   @override
   void dispose() {
@@ -23,12 +33,53 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
     super.dispose();
   }
 
-  void _summarizeIllness() {
-    setState(() {
-      _summarizedIllness = _presentIllnessController.text.length > 100
-          ? '${_presentIllnessController.text.substring(0, 100)}...'
-          : _presentIllnessController.text;
-    });
+  Future<void> _loadPatientData() async {
+    try {
+      final history = await _patientService.getMedicalHistory(widget.patient['id']!);
+      final condition = await _patientService.getCurrentCondition(widget.patient['id']!);
+      
+      setState(() {
+        _medicalHistory = history;
+        _currentCondition = condition;
+        if (condition != null) {
+          _presentIllnessController.text = condition;
+          _summarizedIllness = condition.length > 100
+              ? '${condition.substring(0, 100)}...'
+              : condition;
+        }
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('患者データの取得に失敗しました')),
+        );
+      }
+    }
+  }
+
+  Future<void> _updateCurrentCondition() async {
+    try {
+      await _patientService.updateCurrentCondition(
+        widget.patient['id']!,
+        _presentIllnessController.text,
+      );
+      setState(() {
+        _summarizedIllness = _presentIllnessController.text.length > 100
+            ? '${_presentIllnessController.text.substring(0, 100)}...'
+            : _presentIllnessController.text;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('現病歴を更新しました')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('現病歴の更新に失敗しました')),
+        );
+      }
+    }
   }
 
   @override
@@ -89,23 +140,16 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 16),
-                    const ListTile(
-                      leading: Icon(Icons.medical_information),
-                      title: Text('高血圧'),
-                      subtitle: Text('2020年4月より服薬治療中'),
-                    ),
-                    const Divider(),
-                    const ListTile(
-                      leading: Icon(Icons.medical_information),
-                      title: Text('糖尿病'),
-                      subtitle: Text('2021年8月より食事療法中'),
-                    ),
-                    const Divider(),
-                    const ListTile(
-                      leading: Icon(Icons.medical_information),
-                      title: Text('腰椎ヘルニア'),
-                      subtitle: Text('2019年手術実施'),
-                    ),
+                    ..._medicalHistory.map((history) => Column(
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.medical_information),
+                          title: Text(history['condition'] as String),
+                          subtitle: Text(history['details'] as String),
+                        ),
+                        if (_medicalHistory.last != history) const Divider(),
+                      ],
+                    )).toList(),
                   ],
                 ),
               ),
@@ -133,8 +177,8 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
                     ),
                     const SizedBox(height: 8),
                     ElevatedButton(
-                      onPressed: _summarizeIllness,
-                      child: const Text('要約する'),
+                      onPressed: _updateCurrentCondition,
+                      child: const Text('更新する'),
                     ),
                     if (_summarizedIllness.isNotEmpty) ...[
                       const SizedBox(height: 16),
@@ -165,32 +209,47 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 16),
-                    const TextField(
-                      decoration: InputDecoration(
+                    TextField(
+                      decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         hintText: 'キーワードを入力して検索',
                         prefixIcon: Icon(Icons.search),
                       ),
+                      onChanged: (value) async {
+                        if (value.length >= 2) {
+                          try {
+                            final records = await _patientService.searchMedicalRecords(
+                              widget.patient['id']!,
+                              value,
+                            );
+                            setState(() {
+                              _searchResults = records;
+                            });
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('検索に失敗しました')),
+                              );
+                            }
+                          }
+                        } else {
+                          setState(() {
+                            _searchResults = [];
+                          });
+                        }
+                      },
                     ),
                     const SizedBox(height: 16),
-                    // 検索結果のサンプル
-                    const ListTile(
-                      leading: Icon(Icons.article),
-                      title: Text('血液検査結果 2024/12/25'),
-                      subtitle: Text('WBC: 6500, RBC: 450万, PLT: 25万'),
-                    ),
-                    const Divider(),
-                    const ListTile(
-                      leading: Icon(Icons.medication),
-                      title: Text('処方箋 2024/12/20'),
-                      subtitle: Text('アムロジピン(5mg) 1日1回 朝食後'),
-                    ),
-                    const Divider(),
-                    const ListTile(
-                      leading: Icon(Icons.event_note),
-                      title: Text('診察記録 2024/12/18'),
-                      subtitle: Text('血圧安定。服薬継続の方針。'),
-                    ),
+                    ..._searchResults.map((record) => Column(
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.article),
+                          title: Text(record['title'] as String),
+                          subtitle: Text(record['content'] as String),
+                        ),
+                        if (_searchResults.last != record) const Divider(),
+                      ],
+                    )).toList(),
                   ],
                 ),
               ),

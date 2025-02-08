@@ -1,18 +1,6 @@
 import 'package:flutter/material.dart';
-
-class TodoItem {
-  String title;
-  String description;
-  DateTime deadline;
-  bool isCompleted;
-
-  TodoItem({
-    required this.title,
-    required this.description,
-    required this.deadline,
-    this.isCompleted = false,
-  });
-}
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/todo_service.dart';
 
 class TodoTabScreen extends StatefulWidget {
   const TodoTabScreen({super.key});
@@ -22,23 +10,32 @@ class TodoTabScreen extends StatefulWidget {
 }
 
 class _TodoTabScreenState extends State<TodoTabScreen> {
-  final List<TodoItem> _todos = [
-    TodoItem(
-      title: '血圧測定',
-      description: '朝・昼・晩の3回測定',
-      deadline: DateTime.now().add(const Duration(days: 1)),
-    ),
-    TodoItem(
-      title: '服薬確認',
-      description: '降圧剤の服用確認',
-      deadline: DateTime.now().add(const Duration(hours: 4)),
-    ),
-    TodoItem(
-      title: 'リハビリ',
-      description: '歩行訓練 15分',
-      deadline: DateTime.now().add(const Duration(hours: 6)),
-    ),
-  ];
+  final TodoService _todoService = TodoService();
+  List<Map<String, dynamic>> _todos = [];
+  String _currentUserId = 'demo-user'; // TODO: 認証から取得
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTodos();
+  }
+
+  Future<void> _loadTodos() async {
+    try {
+      final todosStream = _todoService.getTodos('patient-1'); // TODO: 患者IDを動的に取得
+      todosStream.listen((todos) {
+        setState(() {
+          _todos = todos;
+        });
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('TODOリストの取得に失敗しました')),
+        );
+      }
+    }
+  }
 
   void _addTodo() {
     showDialog(
@@ -193,18 +190,24 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
                     ),
                     const SizedBox(width: 8),
                     TextButton(
-                      onPressed: () {
+                      onPressed: () async {
                         if (titleController.text.isNotEmpty) {
-                          setState(() {
-                            _todos.add(
-                              TodoItem(
-                                title: titleController.text,
-                                description: descriptionController.text,
-                                deadline: selectedDate,
-                              ),
+                          try {
+                            await _todoService.addTodo(
+                              patientId: 'patient-1', // TODO: 患者IDを動的に取得
+                              title: titleController.text,
+                              description: descriptionController.text,
+                              deadline: selectedDate,
+                              assignedTo: _currentUserId,
                             );
-                          });
-                          Navigator.pop(context);
+                            Navigator.pop(context);
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('タスクの追加に失敗しました')),
+                              );
+                            }
+                          }
                         }
                       },
                       style: TextButton.styleFrom(
@@ -226,9 +229,16 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
     );
   }
 
+  String _formatDeadline(Timestamp timestamp) {
+    final date = timestamp.toDate();
+    return '${date.year}/${date.month}/${date.day} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
-    _todos.sort((a, b) => a.deadline.compareTo(b.deadline));
+    _todos.sort((a, b) => (a['deadline'] as Timestamp)
+        .toDate()
+        .compareTo((b['deadline'] as Timestamp).toDate()));
 
     return Stack(
       children: [
@@ -266,7 +276,7 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
                             Container(
                               width: 4,
                               decoration: BoxDecoration(
-                                color: todo.isCompleted
+                                color: todo['isCompleted'] as bool
                                     ? Theme.of(context).colorScheme.secondary
                                     : Theme.of(context).colorScheme.primary,
                                 borderRadius: const BorderRadius.only(
@@ -284,11 +294,21 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
                                     Transform.scale(
                                       scale: 1.2,
                                       child: Checkbox(
-                                        value: todo.isCompleted,
-                                        onChanged: (value) {
-                                          setState(() {
-                                            todo.isCompleted = value!;
-                                          });
+                                        value: todo['isCompleted'] as bool,
+                                        onChanged: (value) async {
+                                          try {
+                                            await _todoService.updateTodoStatus(
+                                              patientId: 'patient-1', // TODO: 患者IDを動的に取得
+                                              todoId: todo['id'] as String,
+                                              isCompleted: value!,
+                                            );
+                                          } catch (e) {
+                                            if (mounted) {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                const SnackBar(content: Text('タスクの状態更新に失敗しました')),
+                                              );
+                                            }
+                                          }
                                         },
                                         activeColor: Theme.of(context)
                                             .colorScheme
@@ -306,24 +326,24 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            todo.title,
+                                            todo['title'] as String,
                                             style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.w500,
-                                              decoration: todo.isCompleted
+                                              decoration: todo['isCompleted'] as bool
                                                   ? TextDecoration.lineThrough
                                                   : TextDecoration.none,
-                                              color: todo.isCompleted
+                                              color: todo['isCompleted'] as bool
                                                   ? Colors.grey
                                                   : Colors.black87,
                                             ),
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            todo.description,
+                                            todo['description'] as String,
                                             style: TextStyle(
                                               fontSize: 14,
-                                              color: todo.isCompleted
+                                              color: todo['isCompleted'] as bool
                                                   ? Colors.grey
                                                   : Colors.black54,
                                             ),
@@ -340,7 +360,7 @@ class _TodoTabScreenState extends State<TodoTabScreen> {
                                                   BorderRadius.circular(4),
                                             ),
                                             child: Text(
-                                              '期限: ${todo.deadline.year}/${todo.deadline.month}/${todo.deadline.day} ${todo.deadline.hour}:${todo.deadline.minute.toString().padLeft(2, '0')}',
+                                              '期限: ${_formatDeadline(todo['deadline'] as Timestamp)}',
                                               style: const TextStyle(
                                                 fontSize: 12,
                                                 color: Colors.black54,

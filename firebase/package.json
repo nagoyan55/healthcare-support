@@ -5,7 +5,7 @@
   "type": "commonjs",
   "scripts": {
     "emulator": "firebase emulators:start --import=./data --export-on-exit",
-    "seed": "node seed.js"
+    "seed": "node scripts/seed.js"
   },
   "dependencies": {
     "firebase-admin": "^11.11.1"

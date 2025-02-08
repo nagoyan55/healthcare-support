@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/chat_service.dart';
 
 class Reaction {
   final String emoji;
@@ -11,6 +13,7 @@ class Reaction {
 }
 
 class ChatMessage {
+  final String id;
   final String sender;
   final String message;
   final DateTime timestamp;
@@ -21,6 +24,7 @@ class ChatMessage {
   final bool isShared; // 他の医療従事者と共有されているか
 
   ChatMessage({
+    required this.id,
     required this.sender,
     required this.message,
     required this.timestamp,
@@ -32,6 +36,7 @@ class ChatMessage {
   });
 
   ChatMessage copyWith({
+    String? id,
     String? sender,
     String? message,
     DateTime? timestamp,
@@ -42,6 +47,7 @@ class ChatMessage {
     bool? isShared,
   }) {
     return ChatMessage(
+      id: id ?? this.id,
       sender: sender ?? this.sender,
       message: message ?? this.message,
       timestamp: timestamp ?? this.timestamp,
@@ -63,33 +69,53 @@ class ChatTabScreen extends StatefulWidget {
 
 class _ChatTabScreenState extends State<ChatTabScreen> {
   final TextEditingController _messageController = TextEditingController();
+  final ChatService _chatService = ChatService();
   String? _selectedEhr;
+  List<ChatMessage> _messages = [];
+  String _currentUserId = 'demo-user'; // TODO: 認証から取得
+  String _currentUserName = '鈴木看護師'; // TODO: 認証から取得
 
-  final List<ChatMessage> _messages = [
-    ChatMessage(
-      sender: '山田医師',
-      message: '患者の血圧が高めです。経過観察をお願いします。',
-      timestamp: DateTime.now().subtract(const Duration(days: 1, hours: 2)),
-      isCurrentUser: false,
-      avatarText: '山田',
-      quotedEhr: '血圧: 145/95 mmHg\n脈拍: 78/分\n体温: 36.8℃',
-      reactions: [
-        Reaction(emoji: '👍', user: '鈴木看護師'),
-        Reaction(emoji: '✅', user: '佐藤医師'),
-      ],
-    ),
-    ChatMessage(
-      sender: '鈴木看護師',
-      message: '承知しました。定期的に測定を行います。',
-      timestamp: DateTime.now().subtract(const Duration(hours: 1)),
-      isCurrentUser: true,
-      avatarText: '鈴木',
-      isShared: true,
-      reactions: [
-        Reaction(emoji: '👀', user: '山田医師'),
-      ],
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadMessages();
+  }
+
+  Future<void> _loadMessages() async {
+    try {
+      final messagesStream = _chatService.getMessages('patient-1'); // TODO: 患者IDを動的に取得
+      messagesStream.listen((messages) {
+        setState(() {
+          _messages = messages.map((data) {
+            final reactions = (data['reactions'] as List<dynamic>? ?? [])
+                .map((r) => Reaction(
+                      emoji: r['emoji'] as String,
+                      user: r['user'] as String,
+                    ))
+                .toList();
+
+            return ChatMessage(
+              id: data['id'] as String,
+              sender: data['sender'] as String,
+              message: data['message'] as String,
+              timestamp: (data['timestamp'] as Timestamp).toDate(),
+              isCurrentUser: data['sender'] == _currentUserId,
+              avatarText: data['sender'] == _currentUserId ? '鈴木' : '山田',
+              reactions: reactions,
+              quotedEhr: data['quotedEhr'] as String?,
+              isShared: data['isShared'] as bool,
+            );
+          }).toList();
+        });
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('メッセージの取得に失敗しました')),
+        );
+      }
+    }
+  }
 
   final ScrollController _scrollController = ScrollController();
 
@@ -151,7 +177,7 @@ class _ChatTabScreenState extends State<ChatTabScreen> {
     );
   }
 
-  void _showReactionPicker(ChatMessage message, int index) {
+  Future<void> _showReactionPicker(ChatMessage message, int index) async {
     final reactions = ['👍', '✅', '👀', '❗', '⭐'];
 
     showDialog(
@@ -178,20 +204,22 @@ class _ChatTabScreenState extends State<ChatTabScreen> {
                   spacing: 16,
                   children: reactions.map((emoji) {
                     return InkWell(
-                      onTap: () {
-                        setState(() {
-                          final updatedMessage = message.copyWith(
-                            reactions: [
-                              ...message.reactions,
-                              Reaction(
-                                emoji: emoji,
-                                user: '鈴木看護師',
-                              ),
-                            ],
+                      onTap: () async {
+                        try {
+                          Navigator.pop(context);
+                          await _chatService.addReaction(
+                            patientId: 'patient-1', // TODO: 患者IDを動的に取得
+                            messageId: message.id,
+                            emoji: emoji,
+                            userId: _currentUserId,
                           );
-                          _messages[index] = updatedMessage;
-                        });
-                        Navigator.pop(context);
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('リアクションの追加に失敗しました')),
+                            );
+                          }
+                        }
                       },
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
@@ -211,46 +239,56 @@ class _ChatTabScreenState extends State<ChatTabScreen> {
     );
   }
 
-  void _shareMessage(ChatMessage message, int index) {
-    // 実際の実装では共有先選択UIを表示
-    setState(() {
-      final updatedMessage = message.copyWith(isShared: true);
-      _messages[index] = updatedMessage;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('他の医療従事者と共有しました'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
-  void _sendMessage() {
-    if (_messageController.text.trim().isEmpty) return;
-
-    setState(() {
-      _messages.add(
-        ChatMessage(
-          sender: '鈴木看護師',
-          message: _messageController.text,
-          timestamp: DateTime.now(),
-          isCurrentUser: true,
-          avatarText: '鈴木',
-          quotedEhr: _selectedEhr,
+  Future<void> _shareMessage(ChatMessage message, int index) async {
+    try {
+      await _chatService.shareMessage(
+        patientId: 'patient-1', // TODO: 患者IDを動的に取得
+        messageId: message.id,
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('他の医療従事者と共有しました'),
+          duration: Duration(seconds: 2),
         ),
       );
-      _selectedEhr = null;
-    });
-    _messageController.clear();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('メッセージの共有に失敗しました')),
+        );
+      }
+    }
+  }
 
-    // スクロールを一番下に移動
-    Future.delayed(const Duration(milliseconds: 100), () {
-      _scrollController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
+  Future<void> _sendMessage() async {
+    if (_messageController.text.trim().isEmpty) return;
+
+    try {
+      await _chatService.sendMessage(
+        patientId: 'patient-1', // TODO: 患者IDを動的に取得
+        senderId: _currentUserId,
+        message: _messageController.text,
+        quotedEhr: _selectedEhr,
       );
-    });
+
+      _messageController.clear();
+      _selectedEhr = null;
+
+      // スクロールを一番下に移動
+      Future.delayed(const Duration(milliseconds: 100), () {
+        _scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('メッセージの送信に失敗しました')),
+        );
+      }
+    }
   }
 
   String _formatDate(DateTime date) {
