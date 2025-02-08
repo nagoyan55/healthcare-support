@@ -17,7 +17,7 @@ class TodoTabScreen extends StatefulWidget {
 class _TodoTabScreenState extends State<TodoTabScreen> {
   final TodoService _todoService = TodoService();
   List<Map<String, dynamic>> _todos = [];
-  String _currentUserId = 'demo-user';
+  final String _currentUserId = 'demo-user';
 
   @override
   void initState() {

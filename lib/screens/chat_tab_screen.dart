@@ -77,8 +77,7 @@ class _ChatTabScreenState extends State<ChatTabScreen> {
   final ChatService _chatService = ChatService();
   String? _selectedEhr;
   List<ChatMessage> _messages = [];
-  String _currentUserId = 'demo-user';
-  String _currentUserName = '鈴木看護師';
+  final String _currentUserId = 'demo-user';
 
   @override
   void initState() {

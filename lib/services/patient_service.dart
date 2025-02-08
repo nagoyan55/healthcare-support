@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PatientService {
@@ -9,7 +11,7 @@ class PatientService {
       final doc = await _firestore.collection('patients').doc(patientId).get();
       return doc.data()?['basicInfo'];
     } catch (e) {
-      print('Error getting patient basic info: $e');
+      log('Error getting patient basic info: $e');
       return null;
     }
   }
@@ -21,7 +23,7 @@ class PatientService {
       final List<dynamic> history = doc.data()?['medicalHistory'] ?? [];
       return history.cast<Map<String, dynamic>>();
     } catch (e) {
-      print('Error getting medical history: $e');
+      log('Error getting medical history: $e');
       return [];
     }
   }
@@ -32,7 +34,7 @@ class PatientService {
       final doc = await _firestore.collection('patients').doc(patientId).get();
       return doc.data()?['currentCondition'];
     } catch (e) {
-      print('Error getting current condition: $e');
+      log('Error getting current condition: $e');
       return null;
     }
   }
@@ -44,7 +46,7 @@ class PatientService {
         'currentCondition': condition,
       });
     } catch (e) {
-      print('Error updating current condition: $e');
+      log('Error updating current condition: $e');
       throw '現病歴の更新に失敗しました';
     }
   }
@@ -72,7 +74,7 @@ class PatientService {
         };
       }).toList();
     } catch (e) {
-      print('Error searching medical records: $e');
+      log('Error searching medical records: $e');
       return [];
     }
   }
@@ -81,28 +83,15 @@ class PatientService {
   Future<List<Map<String, dynamic>>> getPatientsByWard(String ward,
       {String? nurseId}) async {
     try {
-      print('Getting patients for ward: $ward');
-
       // まず病棟の患者を取得
       final patientsSnapshot = await _firestore
           .collection('patients')
           .where('basicInfo.ward', isEqualTo: ward)
           .get();
 
-      print('Found ${patientsSnapshot.docs.length} patients');
-      for (var doc in patientsSnapshot.docs) {
-        print('Patient: ${doc.id} - ${doc.data()}');
-      }
-
       // 全ての担当ナース情報を取得
       final assignedPatientsSnapshot =
           await _firestore.collection('assigned_patients').get();
-
-      print(
-          'Found ${assignedPatientsSnapshot.docs.length} assigned patients records');
-      for (var doc in assignedPatientsSnapshot.docs) {
-        print('Assigned patients for nurse ${doc.id}: ${doc.data()}');
-      }
 
       // 患者IDごとの担当ナース情報をマッピング
       Map<String, List<Map<String, dynamic>>> assignedNurses = {};
@@ -149,7 +138,7 @@ class PatientService {
         };
       }).toList();
     } catch (e) {
-      print('Error getting patients by ward: $e');
+      log('Error getting patients by ward: $e');
       return [];
     }
   }
@@ -173,7 +162,7 @@ class PatientService {
         ...data,
       };
     } catch (e) {
-      print('Error getting latest vitals: $e');
+      log('Error getting latest vitals: $e');
       return null;
     }
   }
@@ -196,7 +185,7 @@ class PatientService {
         };
       }).toList();
     } catch (e) {
-      print('Error getting prescriptions: $e');
+      log('Error getting prescriptions: $e');
       return [];
     }
   }

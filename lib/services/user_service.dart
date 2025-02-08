@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserService {
@@ -9,7 +11,7 @@ class UserService {
       final doc = await _firestore.collection('users').doc(userId).get();
       return doc.data();
     } catch (e) {
-      print('Error getting user data: $e');
+      log('Error getting user data: $e');
       return null;
     }
   }
@@ -19,7 +21,7 @@ class UserService {
     try {
       await _firestore.collection('users').doc(userId).update(data);
     } catch (e) {
-      print('Error updating user data: $e');
+      log('Error updating user data: $e');
       throw 'ユーザー情報の更新に失敗しました';
     }
   }
@@ -31,7 +33,7 @@ class UserService {
         'themeColor': colorHex,
       });
     } catch (e) {
-      print('Error updating theme color: $e');
+      log('Error updating theme color: $e');
       throw 'テーマカラーの更新に失敗しました';
     }
   }
@@ -49,7 +51,7 @@ class UserService {
       };
       await _firestore.collection('users').doc(userId).update(data);
     } catch (e) {
-      print('Error updating avatar: $e');
+      log('Error updating avatar: $e');
       throw 'アバターの更新に失敗しました';
     }
   }
@@ -70,7 +72,7 @@ class UserService {
         };
       }).toList();
     } catch (e) {
-      print('Error getting staff by ward: $e');
+      log('Error getting staff by ward: $e');
       return [];
     }
   }
@@ -92,7 +94,7 @@ class UserService {
         };
       }).toList();
     } catch (e) {
-      print('Error getting user tasks: $e');
+      log('Error getting user tasks: $e');
       return [];
     }
   }
@@ -114,7 +116,7 @@ class UserService {
         };
       }).toList();
     } catch (e) {
-      print('Error getting user chats: $e');
+      log('Error getting user chats: $e');
       return [];
     }
   }

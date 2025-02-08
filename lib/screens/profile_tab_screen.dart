@@ -20,7 +20,6 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
   String _summarizedIllness = '';
   List<Map<String, dynamic>> _medicalHistory = [];
   List<Map<String, dynamic>> _searchResults = [];
-  String? _currentCondition;
 
   @override
   void initState() {
@@ -43,7 +42,6 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
 
       setState(() {
         _medicalHistory = history;
-        _currentCondition = condition;
         if (condition != null) {
           _presentIllnessController.text = condition;
           _summarizedIllness = condition.length > 100

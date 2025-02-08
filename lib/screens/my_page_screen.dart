@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -19,7 +21,7 @@ class _StaffTaskTab extends StatefulWidget {
 class _StaffTaskTabState extends State<_StaffTaskTab> {
   final TodoService _todoService = TodoService();
   List<Map<String, dynamic>> _todos = [];
-  String _currentUserId = 'demo-user'; // TODO: 認証から取得
+  final String _currentUserId = 'demo-user'; // TODO: 認証から取得
 
   @override
   void initState() {
@@ -102,7 +104,7 @@ class _StaffChatTab extends StatefulWidget {
 class _StaffChatTabState extends State<_StaffChatTab> {
   final ChatService _chatService = ChatService();
   List<Map<String, dynamic>> _chats = [];
-  String _currentUserId = 'demo-user'; // TODO: 認証から取得
+  final String _currentUserId = 'demo-user'; // TODO: 認証から取得
 
   @override
   void initState() {
@@ -156,8 +158,8 @@ class _StaffChatTabState extends State<_StaffChatTab> {
                 return Card(
                   child: ListTile(
                     leading: CircleAvatar(
-                      child: Icon(Icons.person),
                       backgroundColor: Theme.of(context).colorScheme.primary,
+                      child: const Icon(Icons.person),
                     ),
                     title: Text(chat['title'] as String),
                     subtitle: Text(chat['lastMessage'] as String),
@@ -237,7 +239,7 @@ class _MyPageScreenState extends State<MyPageScreen>
         }
       }
     } catch (e) {
-      print('Error loading user data: $e');
+      log('Error loading user data: $e');
     }
   }
 

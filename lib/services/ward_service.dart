@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class WardService {
@@ -13,7 +15,7 @@ class WardService {
         };
       }).toList();
     } catch (e) {
-      print('Error getting wards: $e');
+      log('Error getting wards: $e');
       return [];
     }
   }

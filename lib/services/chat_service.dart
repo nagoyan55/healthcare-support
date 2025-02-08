@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ChatService {
@@ -51,7 +53,7 @@ class ChatService {
         'lastMessageTime': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (e) {
-      print('Error sending message: $e');
+      log('Error sending message: $e');
       throw 'メッセージの送信に失敗しました';
     }
   }
@@ -78,7 +80,7 @@ class ChatService {
         ]),
       });
     } catch (e) {
-      print('Error adding reaction: $e');
+      log('Error adding reaction: $e');
       throw 'リアクションの追加に失敗しました';
     }
   }
@@ -98,7 +100,7 @@ class ChatService {
         'isShared': true,
       });
     } catch (e) {
-      print('Error sharing message: $e');
+      log('Error sharing message: $e');
       throw 'メッセージの共有に失敗しました';
     }
   }
@@ -123,7 +125,7 @@ class ChatService {
         };
       }).toList();
     } catch (e) {
-      print('Error getting EHR quotes: $e');
+      log('Error getting EHR quotes: $e');
       return [];
     }
   }
@@ -149,7 +151,7 @@ class ChatService {
         };
       }).toList();
     } catch (e) {
-      print('Error getting chat participants: $e');
+      log('Error getting chat participants: $e');
       return [];
     }
   }

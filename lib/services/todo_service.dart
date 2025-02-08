@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TodoService {
@@ -46,7 +48,7 @@ class TodoService {
           .collection('tasks')
           .add(todoData);
     } catch (e) {
-      print('Error adding todo: $e');
+      log('Error adding todo: $e');
       throw 'タスクの追加に失敗しました';
     }
   }
@@ -68,7 +70,7 @@ class TodoService {
         'completedAt': isCompleted ? FieldValue.serverTimestamp() : null,
       });
     } catch (e) {
-      print('Error updating todo status: $e');
+      log('Error updating todo status: $e');
       throw 'タスクの状態更新に失敗しました';
     }
   }
@@ -97,7 +99,7 @@ class TodoService {
           .doc(todoId)
           .update(updates);
     } catch (e) {
-      print('Error updating todo: $e');
+      log('Error updating todo: $e');
       throw 'タスクの更新に失敗しました';
     }
   }
@@ -115,7 +117,7 @@ class TodoService {
           .doc(todoId)
           .delete();
     } catch (e) {
-      print('Error deleting todo: $e');
+      log('Error deleting todo: $e');
       throw 'タスクの削除に失敗しました';
     }
   }
@@ -140,7 +142,7 @@ class TodoService {
         };
       }).toList();
     } catch (e) {
-      print('Error getting overdue todos: $e');
+      log('Error getting overdue todos: $e');
       return [];
     }
   }
@@ -176,7 +178,7 @@ class TodoService {
         ..sort((a, b) =>
             (a['deadline'] as Timestamp).compareTo(b['deadline'] as Timestamp));
     } catch (e) {
-      print('Error getting todos by assignee: $e');
+      log('Error getting todos by assignee: $e');
       return [];
     }
   }
