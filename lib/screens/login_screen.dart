@@ -57,9 +57,8 @@ class _SignInTabState extends State<SignInTab> {
           email: _emailController.text,
           password: _passwordController.text,
         );
-        // ログイン成功後は自動的にホーム画面に遷移
-        // StreamBuilderがユーザーの状態変更を検知して画面遷移を行う
-        debugPrint("Successfully signined");
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, '/ward_selection');
       } on FirebaseAuthException catch (e) {
         String message;
         switch (e.code) {
