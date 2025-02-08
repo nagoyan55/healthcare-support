@@ -17,7 +17,6 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
   final TextEditingController _presentIllnessController =
       TextEditingController();
   final PatientService _patientService = PatientService();
-  String _summarizedIllness = '';
   List<Map<String, dynamic>> _medicalHistory = [];
   List<Map<String, dynamic>> _searchResults = [];
 
@@ -43,9 +42,6 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
         _medicalHistory = history;
         if (condition != null) {
           _presentIllnessController.text = condition;
-          _summarizedIllness = condition.length > 100
-              ? '${condition.substring(0, 100)}...'
-              : condition;
         }
       });
     } catch (e) {
@@ -64,11 +60,7 @@ class _ProfileTabScreenState extends State<ProfileTabScreen> {
         _presentIllnessController.text,
       );
       
-      setState(() {
-        _summarizedIllness = _presentIllnessController.text.length > 100
-            ? '${_presentIllnessController.text.substring(0, 100)}...'
-            : _presentIllnessController.text;
-      });
+      setState(() {});
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('現病歴を更新しました')),

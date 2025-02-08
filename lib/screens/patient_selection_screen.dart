@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../services/user_service.dart';
 import '../services/patient_service.dart';
+import '../widgets/auth_wrapper.dart';
 
 class PatientSelectionScreen extends StatefulWidget {
   const PatientSelectionScreen({super.key});
@@ -15,44 +17,27 @@ class _PatientSelectionScreenState extends State<PatientSelectionScreen> {
   final UserService _userService = UserService();
   final PatientService _patientService = PatientService();
 
-  late Future<Map<String, dynamic>> _screenDataFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _screenDataFuture = _loadScreenData();
-  }
-
-  Future<Map<String, dynamic>> _loadScreenData() async {
-    final currentUser = _authService.currentUser;
-    if (currentUser == null) {
-      throw Exception('ユーザーが見つかりません');
-    }
-
-    final userData = await _userService.getUserData(currentUser.uid);
-    if (userData == null) {
-      throw Exception('ユーザー情報が見つかりません');
-    }
-
-    final Map<String, String> selectedWard =
-        ModalRoute.of(context)!.settings.arguments as Map<String, String>;
-
-    final patients = await _patientService.getPatientsByWard(
-      selectedWard['id']!,
-      nurseId: currentUser.uid,
-    );
-
-    return {
-      'userData': userData,
-      'patients': patients,
-    };
-  }
-
   @override
   Widget build(BuildContext context) {
-    final Map<String, String> selectedWard =
-        ModalRoute.of(context)!.settings.arguments as Map<String, String>;
+    final Map<String, String>? selectedWard =
+        ModalRoute.of(context)?.settings.arguments as Map<String, String>?;
 
+    // 病棟が選択されていない場合
+    if (selectedWard == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(context, '/ward_selection');
+      });
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return AuthWrapper(
+      child: _buildContent(selectedWard),
+    );
+  }
+
+  Widget _buildContent(Map<String, String> selectedWard) {
     return Scaffold(
       appBar: AppBar(
         title: Text('${selectedWard['name']} - 患者一覧'),
@@ -66,7 +51,7 @@ class _PatientSelectionScreenState extends State<PatientSelectionScreen> {
         ],
       ),
       body: FutureBuilder<Map<String, dynamic>>(
-        future: _screenDataFuture,
+        future: _loadScreenData(selectedWard),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -76,6 +61,10 @@ class _PatientSelectionScreenState extends State<PatientSelectionScreen> {
             return Center(
               child: Text('エラーが発生しました: ${snapshot.error}'),
             );
+          }
+
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
           }
 
           final data = snapshot.data!;
@@ -175,5 +164,27 @@ class _PatientSelectionScreenState extends State<PatientSelectionScreen> {
         },
       ),
     );
+  }
+
+  Future<Map<String, dynamic>> _loadScreenData(Map<String, String> selectedWard) async {
+    final currentUser = _authService.currentUser;
+    if (currentUser == null) {
+      throw Exception('ユーザーが見つかりません');
+    }
+
+    final userData = await _userService.getUserData(currentUser.uid);
+    if (userData == null) {
+      throw Exception('ユーザー情報が見つかりません');
+    }
+
+    final patients = await _patientService.getPatientsByWard(
+      selectedWard['id']!,
+      nurseId: currentUser.uid,
+    );
+
+    return {
+      'userData': userData,
+      'patients': patients,
+    };
   }
 }
