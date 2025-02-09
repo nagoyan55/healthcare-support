@@ -9,23 +9,16 @@ import 'screens/patient_selection_screen.dart';
 import 'screens/patient_detail_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/my_page_screen.dart';
-
-const firebaseOptions = FirebaseOptions(
-  apiKey: 'demo-api-key',
-  appId: 'demo-app-id',
-  messagingSenderId: 'demo-sender-id',
-  projectId: 'demo-healthcare-support',
-  authDomain: 'demo-healthcare-support.firebaseapp.com',
-  storageBucket: 'demo-healthcare-support.appspot.com',
-);
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final firebaseOptions = DefaultFirebaseOptions.currentPlatform;
   await Firebase.initializeApp(options: firebaseOptions);
 
   // 開発時はエミュレータに接続
-  const useEmulator = true; // 本番環境では false に設定
-  if (useEmulator) {
+  const useEmulator = String.fromEnvironment("FIREBASE_USE_EMULATOR", defaultValue: "false");
+  if (useEmulator == "true") {
     await _connectToEmulator();
   }
 

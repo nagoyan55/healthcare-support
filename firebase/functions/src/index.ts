@@ -1,9 +1,15 @@
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
-import * as admin from 'firebase-admin';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+const serviceAccountKey: any = require('../firebase-admin-key.json');
 
 // Firebase Adminの初期化
-admin.initializeApp();
+initializeApp({
+  credential: cert(serviceAccountKey)
+});
+
+const firestore = getFirestore();
 
 // Gemini APIの初期化
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
@@ -85,7 +91,7 @@ export const summarizeCondition = onDocumentUpdated({
   if (!event.data?.after?.ref) return;
 
   // 別コレクションに要約を保存
-  await admin.firestore()
+  await firestore
     .collection('patient_summaries')
     .doc(event.params.patientId)
     .set({

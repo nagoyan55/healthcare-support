@@ -2,10 +2,15 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.summarizeCondition = void 0;
 const firestore_1 = require("firebase-functions/v2/firestore");
-const admin = require("firebase-admin");
 const generative_ai_1 = require("@google/generative-ai");
+const app_1 = require("firebase-admin/app");
+const firestore_2 = require("firebase-admin/firestore");
+const serviceAccountKey = require('../firebase-admin-key.json');
 // Firebase Adminの初期化
-admin.initializeApp();
+(0, app_1.initializeApp)({
+    credential: (0, app_1.cert)(serviceAccountKey)
+});
+const firestore = (0, firestore_2.getFirestore)();
 // Gemini APIの初期化
 const genAI = new generative_ai_1.GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
@@ -65,7 +70,7 @@ exports.summarizeCondition = (0, firestore_1.onDocumentUpdated)({
     if (!((_d = (_c = event.data) === null || _c === void 0 ? void 0 : _c.after) === null || _d === void 0 ? void 0 : _d.ref))
         return;
     // 別コレクションに要約を保存
-    await admin.firestore()
+    await firestore
         .collection('patient_summaries')
         .doc(event.params.patientId)
         .set({

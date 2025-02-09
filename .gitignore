@@ -44,3 +44,8 @@ app.*.map.json
 
 # Node
 **/node_modules
+
+# Firebase
+**/.firebase
+**/firebase_options.dart
+**/google-services.json
