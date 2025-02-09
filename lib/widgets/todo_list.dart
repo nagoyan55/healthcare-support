@@ -116,8 +116,6 @@ class TodoList extends StatelessWidget {
   Widget _buildTodoItem(BuildContext context, Map<String, dynamic> todo) {
     final isCompleted = todo['isCompleted'] as bool;
     final theme = Theme.of(context);
-    final primaryColor = theme.colorScheme.primary;
-    final lighterPrimary = HSLColor.fromColor(primaryColor).withLightness(0.7).toColor();
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),

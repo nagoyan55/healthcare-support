@@ -31,7 +31,6 @@ class ThemeNotifier extends _$ThemeNotifier {
   ThemeData _createTheme(Color color) {
     // メリハリのある色を生成
     final hslColor = HSLColor.fromColor(color);
-    final lighterColor = hslColor.withLightness(0.6).toColor();
     final darkerColor = hslColor.withLightness(0.4).toColor();
     
     return ThemeData(
