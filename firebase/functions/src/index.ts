@@ -41,7 +41,7 @@ interface PatientData {
   currentCondition: string;
 }
 
-export const summarizeCondition = onDocumentUpdated({
+export const summarizePatient = onDocumentUpdated({
   document: 'patients/{patientId}',
   region: 'asia-northeast1',
 }, async (event) => {
