@@ -1,30 +1,24 @@
-import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import '../models/chat_message.dart';
-import '../services/chat_service.dart';
 import '../services/user_service.dart';
+import '../models/chat_message.dart';
 import '../utils/date_formatter.dart';
 
-class ChatProvider extends ChangeNotifier {
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
-  
-  String? _error;
-  String? get error => _error;
-  final ChatService _chatService;
+class AIChatProvider extends ChangeNotifier {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final String? currentUserId;
   final UserService _userService;
   String? _currentUserName;
-  final String patientId;
-  final String? currentUserId;
+  bool _isLoading = false;
+  String? _error;
 
-  ChatProvider({
-    required this.patientId,
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+
+  AIChatProvider({
     required this.currentUserId,
-    ChatService? chatService,
     UserService? userService,
-  }) : _chatService = chatService ?? ChatService(),
-       _userService = userService ?? UserService() {
+  }) : _userService = userService ?? UserService() {
     _loadCurrentUserName();
   }
 
@@ -39,16 +33,14 @@ class ChatProvider extends ChangeNotifier {
   }
 
   Stream<Map<String, List<ChatMessage>>> getMessagesByDate() {
-    return _chatService.getMessages(patientId).map((messages) {
-      final messagesList = messages.map((data) {
+    return _firestore
+        .collection('ai_chats')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      final messagesList = snapshot.docs.map((doc) {
         try {
-          final reactions = (data['reactions'] as List<dynamic>? ?? [])
-              .map((r) => Reaction(
-                    emoji: r['emoji'] as String,
-                    user: r['user'] as String,
-                  ))
-              .toList();
-
+          final data = doc.data();
           final timestamp = data['timestamp'];
           final DateTime messageTime;
           if (timestamp is Timestamp) {
@@ -56,23 +48,21 @@ class ChatProvider extends ChangeNotifier {
           } else if (timestamp is DateTime) {
             messageTime = timestamp;
           } else {
-            messageTime = DateTime.now(); // フォールバック
+            messageTime = DateTime.now();
           }
 
           return ChatMessage(
-            id: data['id'] as String? ?? '',
+            id: doc.id,
             sender: data['sender'] as String? ?? '',
             message: data['message'] as String? ?? '',
             timestamp: messageTime,
             isCurrentUser: data['sender'] == currentUserId,
-            avatarText: data['sender'] == currentUserId ? (_currentUserName?.substring(0, 1) ?? '看') : '医',
-            reactions: reactions,
-            quotedEhr: data['quotedEhr'] as String?,
-            isShared: data['isShared'] as bool? ?? false,
+            avatarText: data['sender'] == currentUserId ? (_currentUserName?.substring(0, 1) ?? '看') : 'AI',
+            reactions: const [],
+            isShared: false,
           );
         } catch (e) {
           print('Message parsing error: $e');
-          // エラーが発生した場合はスキップ
           return null;
         }
       }).whereType<ChatMessage>().toList();
@@ -84,12 +74,12 @@ class ChatProvider extends ChangeNotifier {
         messagesByDate.putIfAbsent(date, () => []).add(message);
       }
 
-      // 各日付のメッセージを時刻でソート(新しい順)
+      // 各日付のメッセージを時刻でソート
       messagesByDate.forEach((date, messages) {
         messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));
       });
 
-      // 日付でソート(新しい順)
+      // 日付でソート
       final sortedDates = messagesByDate.keys.toList()
         ..sort((a, b) => b.compareTo(a));
       
@@ -99,7 +89,7 @@ class ChatProvider extends ChangeNotifier {
     });
   }
 
-  Future<void> sendMessage(String message, String? quotedEhr) async {
+  Future<void> sendMessage(String message) async {
     if (currentUserId == null) return;
 
     _error = null;
@@ -107,12 +97,14 @@ class ChatProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _chatService.sendMessage(
-        patientId: patientId,
-        senderId: currentUserId!,
-        message: message,
-        quotedEhr: quotedEhr,
-      );
+      await _firestore
+          .collection('ai_chats')
+          .add({
+            'sender': currentUserId,
+            'message': message,
+            'timestamp': FieldValue.serverTimestamp(),
+          });
+
     } catch (e) {
       _error = 'メッセージの送信に失敗しました';
       notifyListeners();
@@ -125,28 +117,10 @@ class ChatProvider extends ChangeNotifier {
         }
       });
       
-      return; // エラーを再スローしない
+      return;
     }
     
     _isLoading = false;
     notifyListeners();
-  }
-
-  Future<void> addReaction(String messageId, String emoji) async {
-    if (currentUserId == null) return;
-
-    await _chatService.addReaction(
-      patientId: patientId,
-      messageId: messageId,
-      emoji: emoji,
-      userId: currentUserId!,
-    );
-  }
-
-  Future<void> shareMessage(String messageId) async {
-    await _chatService.shareMessage(
-      patientId: patientId,
-      messageId: messageId,
-    );
   }
 }
