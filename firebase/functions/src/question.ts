@@ -1,14 +1,18 @@
 import { GenerateContentRequest, VertexAI } from "@google-cloud/vertexai";
+import { FieldValue, getFirestore } from "firebase-admin/firestore";
+import { onDocumentCreated } from "firebase-functions/firestore";
+import { serviceAccountKey } from "./init";
 
-const dataStoreId = 'patient-information_1739108878909'
-const projectId = "total-practice-446906-e0"
-const location =  "us-central1"
+const dataStoreId = 'patient-information_1739108878909';
+const projectId = "total-practice-446906-e0";
 
 const vertexAI = new VertexAI({
   project: projectId,
-  location: location
-})
-
+  location: "us-central1",
+  googleAuthOptions: {
+    credentials: serviceAccountKey
+  }
+});
 
 const agent = vertexAI.preview.getGenerativeModel({
   model: "gemini-2.0-flash-001",
@@ -32,32 +36,61 @@ const agent = vertexAI.preview.getGenerativeModel({
       }
     }
   ]
-})
+});
 
-const request: GenerateContentRequest = {
-  contents: [
-    {
-      role: "user",
-      parts: [{
-        text: "佐藤見本さんに関して今日のタスクを作って"
-      }]
-    }
-  ]
-}
-
-async function main(){
-  const result = await agent.generateContent(request)
-  const candidates = result.response.candidates
-  if (candidates === undefined || candidates.length === 0){
-    throw new Error("Failed to get response candidates from AI agent")
+const generateAgentResponse = async (prompt: string) => {
+  const request: GenerateContentRequest = {
+    contents: [
+      {
+        role: "user",
+        parts: [{
+          text: prompt
+        }]
+      }
+    ]
+  };
+  const result = await agent.generateContent(request);
+  const candidates = result.response.candidates;
+  if (candidates === undefined || candidates.length === 0) {
+    throw new Error("Failed to get response candidates from AI agent");
   }
-  console.log(candidates[0].content.parts[0].text)
-}
+  return candidates[0].content.parts[0].text!;
+};
 
-main().then(() => {
-  console.log("Done!")
-}).catch((e) => {
-  console.error(e)
+type ChatData = {
+  message: string,
+  sender: string,
+  timestamp: FieldValue;
+};
+
+export const respondToUserChat = onDocumentCreated({
+  document: "ai_chats/{doc_id}",
+  region: 'asia-northeast1'
+}, async (event) => {
+  console.log("function triggered by ai_chats document created");
+  const userChat = event.data?.data() as ChatData;
+  if (!userChat) {
+    console.log('No data found');
+    return;
+  }
+  if (userChat.sender === "ai") {
+    console.log("Don't respond to ai chat");
+    return;
+  }
+
+  console.log('Processing chat data:', {
+    sender: userChat.sender,
+    timestamp: userChat.timestamp
+  });
+
+  const agentResponse = await generateAgentResponse(userChat.message);
+  const aiChat: ChatData = {
+    message: agentResponse,
+    sender: "ai",
+    timestamp: FieldValue.serverTimestamp()
+  };
+  const firestore = getFirestore();
+  const doc = await firestore.collection("ai_chats").add(aiChat)
+  console.log(`successfully response from ai: ${doc.id}`);
 })
-
 

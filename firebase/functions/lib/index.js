@@ -1,80 +1,19 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.summarizeCondition = void 0;
-const firestore_1 = require("firebase-functions/v2/firestore");
-const generative_ai_1 = require("@google/generative-ai");
-const app_1 = require("firebase-admin/app");
-const firestore_2 = require("firebase-admin/firestore");
-const serviceAccountKey = require('../firebase-admin-key.json');
-// Firebase Adminの初期化
-(0, app_1.initializeApp)({
-    credential: (0, app_1.cert)(serviceAccountKey)
-});
-const firestore = (0, firestore_2.getFirestore)();
-// Gemini APIの初期化
-const genAI = new generative_ai_1.GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-async function generateSummary(prompt) {
-    try {
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        return response.text();
-    }
-    catch (error) {
-        console.error('Error generating summary:', error);
-        throw error;
-    }
-}
-exports.summarizeCondition = (0, firestore_1.onDocumentUpdated)({
-    document: 'patients/{patientId}',
-    region: 'asia-northeast1',
-}, async (event) => {
-    var _a, _b, _c, _d;
-    console.log('Function triggered for patient:', event.params.patientId);
-    const newData = (_b = (_a = event.data) === null || _a === void 0 ? void 0 : _a.after) === null || _b === void 0 ? void 0 : _b.data();
-    if (!newData) {
-        console.log('No new data found');
-        return;
-    }
-    console.log('Processing patient data:', {
-        name: newData.basicInfo.name,
-        currentCondition: newData.currentCondition
-    });
-    // 患者情報を構造化
-    const patientInfo = {
-        基本情報: {
-            氏名: newData.basicInfo.name,
-            性別: newData.basicInfo.gender === 'M' ? '男性' : '女性',
-            病室: `${newData.basicInfo.room}号室 ${newData.basicInfo.bed}`,
-        },
-        既往歴: newData.medicalHistory.map((history) => ({
-            疾患: history.condition,
-            発症日: new Date(history.startDate).toLocaleDateString('ja-JP'),
-            詳細: history.details,
-        })),
-        現病歴: newData.currentCondition,
-    };
-    // Gemini APIを使用して要約を生成
-    const prompt = `
-      以下の患者情報を医療従事者向けに簡潔に要約してください。
-      要約は以下のフォーマットに従ってください:
-      - 患者概要:
-      - 主要な既往歴:
-      - 現在の状態:
-      - 注意点:
-
-      患者情報:
-      ${JSON.stringify(patientInfo, null, 2)}
-    `;
-    const summary = await generateSummary(prompt);
-    if (!((_d = (_c = event.data) === null || _c === void 0 ? void 0 : _c.after) === null || _d === void 0 ? void 0 : _d.ref))
-        return;
-    // 別コレクションに要約を保存
-    await firestore
-        .collection('patient_summaries')
-        .doc(event.params.patientId)
-        .set({
-        content: summary
-    });
-});
+__exportStar(require("./summarize"), exports);
+__exportStar(require("./question"), exports);
 //# sourceMappingURL=index.js.map
