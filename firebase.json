@@ -21,12 +21,5 @@
   },
   "hosting": {
     "source": "./"
-  },
-  "functions": {
-    "source": "firebase/functions",
-    "predeploy": [
-      "npm --prefix functions run build"
-    ],
-    "runtime": "nodejs22"
   }
 }
